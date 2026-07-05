@@ -63,7 +63,7 @@ jobs:
       - name: Setup Rust (with Android targets)
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -84,15 +84,29 @@ jobs:
       - name: Initialize Android project
         run: cargo tauri android init
 
-      - name: Build Android APK
-        run: cargo tauri android build --apk
+      - name: Build Android APK (arm64 only — modern phones)
+        run: cargo tauri android build --apk --target aarch64
+
+      - name: Sign APK (self-signed so it installs on a real device)
+        run: |
+          KS="$RUNNER_TEMP/nron.keystore"
+          keytool -genkeypair -v -keystore "$KS" -alias nron \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass nron12345 -keypass nron12345 \
+            -dname "CN=Nron Editor, O=Nron, L=Tehran, C=IR"
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)"
+          echo "Using build-tools: $BT"
+          UNSIGNED="$(find src-tauri/gen/android -name '*-release-unsigned.apk' | head -n1)"
+          echo "Unsigned APK: $UNSIGNED"
+          "$BT/zipalign" -p -f 4 "$UNSIGNED" nron-editor-arm64.apk
+          "$BT/apksigner" sign --ks "$KS" --ks-pass pass:nron12345 --key-pass pass:nron12345 nron-editor-arm64.apk
+          "$BT/apksigner" verify --verbose nron-editor-arm64.apk
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: nron-editor-android
-          path: |
-            src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          path: nron-editor-arm64.apk
 
   # ----------------------------- RELEASE -----------------------------
   release:
