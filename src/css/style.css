@@ -4,6 +4,7 @@
   --accent-2:#2783de; --danger:#e5645f; --ok:#46a171; --warn:#d5803b;
   --radius:10px; --radius-sm:7px; --shadow:0 6px 24px rgba(0,0,0,.35);
   --header-h:52px; --toolbar-h:46px; --tabs-h:38px; --status-h:30px;
+  --sidebar-w:260px; --rightpanel-w:280px;
   --editor-font:'Vazirmatn'; --editor-fs:18px; --editor-lh:1.9;
   --editor-dir:rtl; --editor-bg-opacity:0.9; --bg-image:none;
   --font-ui:'Vazirmatn', Tahoma, system-ui, sans-serif;
@@ -117,11 +118,29 @@ select,input,textarea{font-family:inherit; color:inherit}
 /* ---------- WORKSPACE ---------- */
 .workspace{flex:1; display:flex; min-height:0; position:relative}
 .sidebar,.source-panel{
-  width:260px; flex-shrink:0; background:var(--surface); display:flex; flex-direction:column;
+  flex-shrink:0; background:var(--surface); display:flex; flex-direction:column;
   min-height:0;
 }
-.sidebar{border-inline-end:1px solid var(--border)}
-.source-panel{border-inline-start:1px solid var(--border)}
+.sidebar{width:var(--sidebar-w); border-inline-end:1px solid var(--border)}
+.source-panel{width:var(--rightpanel-w); border-inline-start:1px solid var(--border)}
+
+/* ---------- RESIZERS & COLLAPSE ---------- */
+.resizer{
+  width:6px; flex-shrink:0; cursor:col-resize; background:transparent;
+  position:relative; z-index:8; transition:background .15s; touch-action:none;
+}
+.resizer::before{
+  content:""; position:absolute; inset-block:0; inset-inline-start:2px; width:2px;
+  background:var(--border); transition:background .15s;
+}
+.resizer:hover::before,.resizer.dragging::before{background:var(--accent); width:3px}
+.panel-collapse{color:var(--text-dim); flex-shrink:0; font-weight:700}
+.panel-head-actions{display:flex; align-items:center; gap:4px}
+#btn-panel-left.active,#btn-panel-right.active{color:var(--accent); background:var(--surface-2)}
+@media (min-width:861px){
+  .sidebar.collapsed,.source-panel.collapsed{display:none}
+  .resizer.collapsed{display:none}
+}
 .sidebar-tabs{display:flex; border-bottom:1px solid var(--border)}
 .sidebar-tab{flex:1; background:transparent; border:none; padding:11px; font-size:13px; color:var(--text-dim); border-bottom:2px solid transparent}
 .sidebar-tab.active{color:var(--text); border-bottom-color:var(--accent); font-weight:600}
