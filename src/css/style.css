@@ -275,8 +275,9 @@ input[type=range]{accent-color:var(--accent); width:100%}
 /* ---------- MOBILE NAV ---------- */
 .only-mobile{display:none}
 .bottom-nav{
-  display:none; height:60px; background:var(--surface); border-top:1px solid var(--border);
-  padding-bottom:env(safe-area-inset-bottom);
+  display:none; min-height:60px; background:var(--surface); border-top:1px solid var(--border);
+  /* add the Android gesture-bar height BELOW the buttons (not inside a fixed height) */
+  padding-bottom:max(env(safe-area-inset-bottom), 8px);
 }
 .bottom-nav button{
   flex:1; background:transparent; border:none; display:flex; flex-direction:column;
