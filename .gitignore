@@ -1,0 +1,20 @@
+# Rust / Tauri
+/src-tauri/target/
+/src-tauri/gen/
+Cargo.lock
+
+# Android
+*.keystore
+*.jks
+local.properties
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Node (if you later add a bundler)
+node_modules/
+dist-web/

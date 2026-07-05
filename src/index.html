@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+<meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#0b0f14" />
+<title>Nron Editor</title>
+<link rel="stylesheet" href="assets/vazirmatn.css" />
+<link rel="stylesheet" href="assets/roboto-mono.css" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ HEADER / TOP BAR ============ -->
+  <header class="header">
+    <button class="icon-btn only-mobile" id="btn-menu" aria-label="منو" title="منو">☰</button>
+    <div class="brand">
+      <img src="assets/logo.png" alt="" class="brand-logo" onerror="this.style.display='none'" />
+      <span class="brand-name">Nron</span>
+    </div>
+
+    <div class="header-status only-desktop">
+      <span class="pomodoro" id="pomodoro-display">۲۵:۰۰</span>
+    </div>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-find" aria-label="جستجو" title="جستجو و جایگزینی (Ctrl+F)">🔍</button>
+      <button class="icon-btn" id="btn-pomodoro" aria-label="پومودورو" title="پومودورو">⏱</button>
+      <button class="icon-btn" id="btn-zen" aria-label="تمرکز" title="حالت تمرکز (F11)">⛶</button>
+      <button class="icon-btn" id="btn-theme" aria-label="تم" title="روشن/تاریک">◐</button>
+      <button class="btn btn-primary" id="btn-save" title="ذخیره (Ctrl+S)">ذخیره</button>
+      <div class="dropdown">
+        <button class="btn" id="btn-export">خروجی ▾</button>
+        <div class="dropdown-content">
+          <button data-export="pdf">PDF</button>
+          <button data-export="docx">Word (DOCX)</button>
+          <button data-export="epub">EPUB</button>
+          <button data-export="md">Markdown</button>
+          <button data-export="html">HTML</button>
+          <button data-export="txt">متن ساده</button>
+        </div>
+      </div>
+      <button class="icon-btn only-desktop" id="btn-import" title="ورود فایل">⤓</button>
+      <button class="icon-btn" id="btn-settings" aria-label="تنظیمات" title="تنظیمات">⚙</button>
+    </div>
+  </header>
+
+  <!-- ============ FORMATTING TOOLBAR ============ -->
+  <div class="toolbar" id="toolbar">
+    <div class="tool-group">
+      <button class="icon-btn" id="btn-new-tab" title="سند جدید (Ctrl+N)">＋</button>
+      <button class="icon-btn" id="btn-source" title="حالت سورس">&lt;/&gt;</button>
+      <button class="icon-btn" id="btn-outline" title="فهرست مطالب">☰</button>
+    </div>
+    <div class="tool-sep"></div>
+    <div class="tool-group">
+      <select id="format-select" title="سبک پاراگراف">
+        <option value="p">متن</option>
+        <option value="h1">تیتر ۱</option>
+        <option value="h2">تیتر ۲</option>
+        <option value="h3">تیتر ۳</option>
+        <option value="blockquote">نقل‌قول</option>
+        <option value="pre">کد</option>
+      </select>
+      <select id="font-select" title="فونت">
+        <option value="Vazirmatn">وزیر</option>
+        <option value="Tahoma">Tahoma</option>
+        <option value="Arial">Arial</option>
+        <option value="'Roboto Mono'">Roboto Mono</option>
+      </select>
+    </div>
+    <div class="tool-sep"></div>
+    <div class="tool-group">
+      <button class="icon-btn format-btn" data-cmd="bold" title="پررنگ (Ctrl+B)"><b>B</b></button>
+      <button class="icon-btn format-btn" data-cmd="italic" title="مورب (Ctrl+I)"><i>I</i></button>
+      <button class="icon-btn format-btn" data-cmd="underline" title="زیرخط (Ctrl+U)"><u>U</u></button>
+      <button class="icon-btn format-btn" data-cmd="strikeThrough" title="خط‌خورده"><s>S</s></button>
+    </div>
+    <div class="tool-sep"></div>
+    <div class="tool-group">
+      <button class="icon-btn format-btn" data-cmd="justifyRight" title="راست‌چین">≡</button>
+      <button class="icon-btn format-btn" data-cmd="justifyCenter" title="وسط‌چین">≣</button>
+      <button class="icon-btn format-btn" data-cmd="justifyLeft" title="چپ‌چین">≡</button>
+    </div>
+    <div class="tool-sep"></div>
+    <div class="tool-group">
+      <button class="icon-btn format-btn" data-cmd="insertUnorderedList" title="لیست نقطه‌ای">•–</button>
+      <button class="icon-btn format-btn" data-cmd="insertOrderedList" title="لیست شماره‌ای">١٢</button>
+      <button class="icon-btn" id="btn-link" title="پیوند">🔗</button>
+      <button class="icon-btn" id="btn-table" title="جدول">▦</button>
+      <button class="icon-btn" id="btn-image" title="تصویر">🖼</button>
+    </div>
+  </div>
+
+  <!-- ============ DOCUMENT TABS ============ -->
+  <div class="doc-tabs" id="doc-tabs"></div>
+
+  <!-- ============ WORKSPACE ============ -->
+  <div class="workspace" id="workspace">
+
+    <!-- Left sidebar: history + outline -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" data-panel="history">تغییرات</button>
+        <button class="sidebar-tab" data-panel="outline">فهرست</button>
+      </div>
+      <div class="sidebar-body">
+        <div class="sidebar-panel active" id="panel-history">
+          <div class="sidebar-header">
+            <span>تاریخچه نسخه‌ها</span>
+            <button class="icon-btn sm" id="btn-clear-history" title="پاک کردن">🗑</button>
+          </div>
+          <div class="history-list" id="history-list"></div>
+        </div>
+        <div class="sidebar-panel" id="panel-outline">
+          <div class="sidebar-header"><span>فهرست مطالب</span></div>
+          <div class="outline-list" id="outline-list"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Editor -->
+    <main class="editor-wrapper" id="editor-wrapper">
+      <div id="visual-editor" contenteditable="true" spellcheck="false" dir="auto"></div>
+      <textarea id="source-editor" spellcheck="false" dir="ltr"></textarea>
+    </main>
+
+    <!-- Right panel: articles / references -->
+    <aside class="source-panel" id="source-panel">
+      <div class="panel-header">
+        <span class="panel-title">مقالات و منابع</span>
+        <button class="btn sm" id="btn-add-article">افزودن</button>
+      </div>
+      <div class="article-tabs" id="article-tabs"></div>
+      <div class="article-content" id="article-viewer"></div>
+    </aside>
+  </div>
+
+  <!-- ============ STATUS BAR ============ -->
+  <footer class="statusbar">
+    <span id="status-msg">آماده</span>
+    <div class="status-stats">
+      <span id="read-time">مطالعه: ۰ دقیقه</span>
+      <span class="status-dot">·</span>
+      <span id="char-count">نویسه: ۰</span>
+      <span class="status-dot">·</span>
+      <span id="word-count">کلمات: ۰</span>
+    </div>
+  </footer>
+
+  <!-- ============ MOBILE BOTTOM NAV ============ -->
+  <nav class="bottom-nav only-mobile" id="bottom-nav">
+    <button data-nav="editor" class="active">✎<span>نوشتن</span></button>
+    <button data-nav="outline">☰<span>فهرست</span></button>
+    <button data-nav="history">↺<span>تاریخچه</span></button>
+    <button data-nav="articles">📚<span>منابع</span></button>
+    <button data-nav="format">✱<span>قالب</span></button>
+  </nav>
+
+  <!-- ============ MODALS ============ -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head"><h3>تنظیمات</h3><button class="icon-btn" data-close="settings-modal">✕</button></div>
+      <div class="setting-group"><label>تم</label>
+        <div class="seg" id="seg-theme"><button data-theme-val="dark">تاریک</button><button data-theme-val="light">روشن</button></div>
+      </div>
+      <div class="setting-group"><label>اندازه فونت متن (<span id="fs-val">18</span>px)</label>
+        <input type="range" id="font-size" min="14" max="32" step="1" value="18" /></div>
+      <div class="setting-group"><label>فاصله خطوط (<span id="lh-val">1.9</span>)</label>
+        <input type="range" id="line-height" min="1.4" max="2.6" step="0.1" value="1.9" /></div>
+      <div class="setting-group"><label>جهت نوشتار</label>
+        <div class="seg" id="seg-dir"><button data-dir-val="rtl">راست‌به‌چپ</button><button data-dir-val="ltr">چپ‌به‌راست</button></div>
+      </div>
+      <div class="setting-group"><label>تصویر پس‌زمینه</label>
+        <input type="file" id="bg-file" accept="image/*" />
+        <button class="btn sm" id="btn-clear-bg">حذف پس‌زمینه</button></div>
+      <div class="setting-group"><label>شفافیت ادیتور (<span id="op-val">0.9</span>)</label>
+        <input type="range" id="editor-opacity" min="0.2" max="1" step="0.05" value="0.9" /></div>
+      <div class="setting-group"><label class="chk"><input type="checkbox" id="typewriter-mode" /> حالت ماشین‌تحریر (تمرکز روی خط جاری)</label></div>
+      <div class="modal-btns"><button class="btn btn-primary" data-close="settings-modal">بستن</button></div>
+    </div>
+  </div>
+
+  <div id="article-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head"><h3>افزودن مقاله</h3><button class="icon-btn" data-close="article-modal">✕</button></div>
+      <input type="text" id="art-title" class="field" placeholder="عنوان مقاله" />
+      <textarea id="art-content" class="field" placeholder="متن مقاله..." rows="7"></textarea>
+      <div class="modal-btns">
+        <button class="btn btn-primary" id="btn-save-article">ذخیره</button>
+        <button class="btn" data-close="article-modal">لغو</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="find-bar" class="find-bar hidden">
+    <input type="text" id="find-input" placeholder="جستجو..." />
+    <input type="text" id="replace-input" placeholder="جایگزین با..." />
+    <span id="find-count" class="find-count">۰/۰</span>
+    <button class="btn sm" id="find-prev" title="قبلی">↑</button>
+    <button class="btn sm" id="find-next" title="بعدی">↓</button>
+    <button class="btn sm" id="replace-one">جایگزین</button>
+    <button class="btn sm" id="replace-all">همه</button>
+    <button class="icon-btn" id="find-close">✕</button>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <input type="file" id="img-input" hidden accept="image/*" />
+  <input type="file" id="import-input" hidden accept=".txt,.md,.html,.htm" />
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/core-bridge.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/history.js"></script>
+<script src="js/export.js"></script>
+<script src="js/articles.js"></script>
+<script src="js/find.js"></script>
+<script src="js/outline.js"></script>
+<script src="js/shortcuts.js"></script>
+<script src="js/mobile.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

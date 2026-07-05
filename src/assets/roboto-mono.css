@@ -1,0 +1,17 @@
+/* Roboto Mono variable font (self-hosted, offline) — used for source/code mode. */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('RobotoMono-VariableFont_wght.ttf') format('truetype-variations'),
+       url('RobotoMono-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('RobotoMono-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('RobotoMono-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 700;
+  font-style: italic;
+  font-display: swap;
+}
