@@ -26,12 +26,12 @@
     </div>
 
     <div class="header-actions">
-      <button class="icon-btn" id="btn-find" aria-label="جستجو" title="جستجو و جایگزینی (Ctrl+F)">🔍</button>
-      <button class="icon-btn" id="btn-pomodoro" aria-label="پومودورو" title="پومودورو">⏱</button>
-      <button class="icon-btn" id="btn-zen" aria-label="تمرکز" title="حالت تمرکز (F11)">⛶</button>
-      <button class="icon-btn" id="btn-theme" aria-label="تم" title="روشن/تاریک">◐</button>
+      <button class="icon-btn only-desktop" id="btn-find" aria-label="جستجو" title="جستجو و جایگزینی (Ctrl+F)">🔍</button>
+      <button class="icon-btn only-desktop" id="btn-pomodoro" aria-label="پومودورو" title="پومودورو">⏱</button>
+      <button class="icon-btn only-desktop" id="btn-zen" aria-label="تمرکز" title="حالت تمرکز (F11)">⛶</button>
+      <button class="icon-btn only-desktop" id="btn-theme" aria-label="تم" title="روشن/تاریک">◐</button>
       <button class="btn btn-primary" id="btn-save" title="ذخیره (Ctrl+S)">ذخیره</button>
-      <div class="dropdown">
+      <div class="dropdown only-desktop">
         <button class="btn" id="btn-export">خروجی ▾</button>
         <div class="dropdown-content">
           <button data-export="pdf">PDF</button>
@@ -43,7 +43,7 @@
         </div>
       </div>
       <button class="icon-btn only-desktop" id="btn-import" title="ورود فایل">⤓</button>
-      <button class="icon-btn" id="btn-settings" aria-label="تنظیمات" title="تنظیمات">⚙</button>
+      <button class="icon-btn only-desktop" id="btn-settings" aria-label="تنظیمات" title="تنظیمات">⚙</button>
     </div>
   </header>
 
@@ -170,6 +170,34 @@
     <button data-nav="articles">📚<span>منابع</span></button>
     <button data-nav="format">✱<span>قالب</span></button>
   </nav>
+
+  <!-- ============ MOBILE BOTTOM SHEETS (Android-specific UI) ============ -->
+  <div class="sheet-backdrop only-mobile" id="sheet-backdrop"></div>
+
+  <button class="fab only-mobile" id="fab-new" aria-label="سند جدید" title="سند جدید">＋</button>
+
+  <div class="m-sheet only-mobile" id="more-sheet" role="dialog" aria-label="منو و ابزارها">
+    <div class="sheet-grip"></div>
+    <div class="m-sheet-head">ابزارها</div>
+    <div class="m-actions">
+      <button class="m-action" data-proxy="btn-find"><span class="mi">🔍</span>جستجو</button>
+      <button class="m-action" data-proxy="btn-theme"><span class="mi">◐</span>تم</button>
+      <button class="m-action" data-proxy="btn-pomodoro"><span class="mi">⏱</span>پومودورو</button>
+      <button class="m-action" data-proxy="btn-zen"><span class="mi">⛶</span>تمرکز</button>
+      <button class="m-action" data-proxy="btn-source"><span class="mi">&lt;/&gt;</span>سورس</button>
+      <button class="m-action" data-proxy="btn-import"><span class="mi">⤓</span>ورود</button>
+      <button class="m-action" data-proxy="btn-settings"><span class="mi">⚙</span>تنظیمات</button>
+    </div>
+    <div class="m-sheet-head">خروجی گرفتن</div>
+    <div class="m-actions">
+      <button class="m-action" data-export="pdf"><span class="mi">📄</span>PDF</button>
+      <button class="m-action" data-export="docx"><span class="mi">📝</span>Word</button>
+      <button class="m-action" data-export="epub"><span class="mi">📖</span>EPUB</button>
+      <button class="m-action" data-export="md"><span class="mi">⬇</span>MD</button>
+      <button class="m-action" data-export="html"><span class="mi">🌐</span>HTML</button>
+      <button class="m-action" data-export="txt"><span class="mi">🅣</span>متن</button>
+    </div>
+  </div>
 
   <!-- ============ MODALS ============ -->
   <div id="settings-modal" class="modal-overlay hidden">
