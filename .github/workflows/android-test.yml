@@ -1,0 +1,109 @@
+name: Android TEST (no cache, arm64)
+
+# Manual-only, Android-only, ZERO cache build for fast iteration/testing.
+# Run it from the Actions tab -> "Android TEST (no cache, arm64)" -> Run workflow.
+on:
+  workflow_dispatch:
+
+# Cancel any older running test build so you always get the latest.
+concurrency:
+  group: android-test
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  android-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (fresh, no cache)
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-depth: 0
+
+      - name: Show commit + prove new files are in the checkout
+        run: |
+          echo "Commit: $(git rev-parse HEAD)"
+          echo "Commit date: $(git show -s --format=%ci HEAD)"
+          echo '--- listing src/js ---'
+          ls -la src/js || true
+          echo '--- is debug.js referenced in index.html? ---'
+          grep -n 'debug.js' src/index.html || echo 'WARNING: debug.js NOT referenced in index.html'
+          echo '--- does debug.js file exist? ---'
+          test -f src/js/debug.js && echo 'OK: src/js/debug.js present' || echo 'MISSING: src/js/debug.js'
+
+      - name: Nuke any local build output (force clean)
+        run: rm -rf src-tauri/gen src-tauri/target target || true
+
+      - name: Setup Java (17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK + platform tools
+        run: sdkmanager "ndk;26.1.10909125" "platform-tools" "platforms;android-34"
+
+      - name: Setup Rust (with Android target, NO cache)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+
+      - name: Export NDK path
+        run: echo "NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> "$GITHUB_ENV"
+
+      - name: Initialize Android project
+        run: cargo tauri android init
+
+      - name: Build Android APK (arm64 only)
+        run: cargo tauri android build --apk --target aarch64
+
+      - name: PROVE the frontend files landed inside the build
+        run: |
+          echo '--- searching the generated Android project for our web assets ---'
+          find src-tauri/gen/android -name 'debug.js' -print || true
+          find src-tauri/gen/android -name 'index.html' -print || true
+          echo '--- grep debug.js inside the bundled index.html (if found) ---'
+          for f in $(find src-tauri/gen/android -name 'index.html'); do
+            echo "== $f =="
+            grep -n 'debug.js' "$f" && echo 'CONFIRMED: debug.js is bundled' || echo 'NOT FOUND in this index.html'
+          done
+
+      - name: Sign APK (self-signed so it installs on a real device)
+        run: |
+          KS="$RUNNER_TEMP/nron.keystore"
+          keytool -genkeypair -v -keystore "$KS" -alias nron \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass nron12345 -keypass nron12345 \
+            -dname "CN=Nron Editor, O=Nron, L=Tehran, C=IR"
+          BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)"
+          echo "Using build-tools: $BT"
+          UNSIGNED="$(find src-tauri/gen/android -name '*-release-unsigned.apk' | head -n1)"
+          echo "Unsigned APK: $UNSIGNED"
+          "$BT/zipalign" -p -f 4 "$UNSIGNED" nron-editor-arm64.apk
+          "$BT/apksigner" sign --ks "$KS" --ks-pass pass:nron12345 --key-pass pass:nron12345 nron-editor-arm64.apk
+          "$BT/apksigner" verify --verbose nron-editor-arm64.apk
+
+      - name: Confirm debug.js is INSIDE the final APK
+        run: |
+          echo '--- grepping the APK contents for debug.js ---'
+          unzip -l nron-editor-arm64.apk | grep -i 'debug.js' && echo 'CONFIRMED: debug.js packaged in APK' || echo 'debug.js not listed as a separate file (may be embedded in binary)'
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nron-android-test
+          path: nron-editor-arm64.apk
