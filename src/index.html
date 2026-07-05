@@ -50,9 +50,11 @@
   <!-- ============ FORMATTING TOOLBAR ============ -->
   <div class="toolbar" id="toolbar">
     <div class="tool-group">
+      <button class="icon-btn only-desktop" id="btn-panel-left" title="نمایش/بستن پنل کناری">▥</button>
       <button class="icon-btn" id="btn-new-tab" title="سند جدید (Ctrl+N)">＋</button>
       <button class="icon-btn" id="btn-source" title="حالت سورس">&lt;/&gt;</button>
       <button class="icon-btn" id="btn-outline" title="فهرست مطالب">☰</button>
+      <button class="icon-btn only-desktop" id="btn-panel-right" title="نمایش/بستن پنل منابع">▤</button>
     </div>
     <div class="tool-sep"></div>
     <div class="tool-group">
@@ -105,6 +107,7 @@
       <div class="sidebar-tabs">
         <button class="sidebar-tab active" data-panel="history">تغییرات</button>
         <button class="sidebar-tab" data-panel="outline">فهرست</button>
+        <button class="icon-btn sm panel-collapse only-desktop" data-collapse="sidebar" title="بستن پنل">«</button>
       </div>
       <div class="sidebar-body">
         <div class="sidebar-panel active" id="panel-history">
@@ -121,17 +124,26 @@
       </div>
     </aside>
 
+    <!-- Resizer between sidebar and editor -->
+    <div class="resizer only-desktop" data-resize="sidebar" title="کشیدن برای تغییر اندازه"></div>
+
     <!-- Editor -->
     <main class="editor-wrapper" id="editor-wrapper">
       <div id="visual-editor" contenteditable="true" spellcheck="false" dir="auto"></div>
       <textarea id="source-editor" spellcheck="false" dir="ltr"></textarea>
     </main>
 
+    <!-- Resizer between editor and right panel -->
+    <div class="resizer only-desktop" data-resize="source-panel" title="کشیدن برای تغییر اندازه"></div>
+
     <!-- Right panel: articles / references -->
     <aside class="source-panel" id="source-panel">
       <div class="panel-header">
         <span class="panel-title">مقالات و منابع</span>
-        <button class="btn sm" id="btn-add-article">افزودن</button>
+        <div class="panel-head-actions">
+          <button class="btn sm" id="btn-add-article">افزودن</button>
+          <button class="icon-btn sm panel-collapse only-desktop" data-collapse="source-panel" title="بستن پنل">»</button>
+        </div>
       </div>
       <div class="article-tabs" id="article-tabs"></div>
       <div class="article-content" id="article-viewer"></div>
@@ -222,6 +234,7 @@
 <script src="js/outline.js"></script>
 <script src="js/shortcuts.js"></script>
 <script src="js/mobile.js"></script>
+<script src="js/panels.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
