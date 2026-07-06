@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="assets/roboto-mono.css" />
 <link rel="stylesheet" href="css/style.css" />
 <link rel="stylesheet" href="css/glass.css" />
+<link rel="stylesheet" href="css/features.css" />
 </head>
 <body>
 <div class="app" id="app">
@@ -28,6 +29,8 @@
 
     <div class="header-actions">
       <button class="icon-btn only-desktop" id="btn-find" aria-label="جستجو" title="جستجو و جایگزینی (Ctrl+F)">🔍</button>
+      <button class="icon-btn only-desktop" id="btn-gsearch" aria-label="جستجوی سراسری" title="جستجوی سراسری بین همه سندها (Ctrl+Shift+F)">🔎</button>
+      <button class="icon-btn only-desktop" id="btn-cleanup" aria-label="پاکسازی متن" title="پاکسازی نیم‌فاصله و ی/ک عربی">🧹</button>
       <button class="icon-btn only-desktop" id="btn-pomodoro" aria-label="پومودورو" title="پومودورو">⏱</button>
       <button class="icon-btn only-desktop" id="btn-zen" aria-label="تمرکز" title="حالت تمرکز (F11)">⛶</button>
       <button class="icon-btn only-desktop" id="btn-theme" aria-label="تم" title="روشن/تاریک">◐</button>
@@ -114,6 +117,7 @@
         <div class="sidebar-panel active" id="panel-history">
           <div class="sidebar-header">
             <span>تاریخچه نسخه‌ها</span>
+            <button class="icon-btn sm" id="btn-snapshot" title="ثبت نسخه فعلی">📸</button>
             <button class="icon-btn sm" id="btn-clear-history" title="پاک کردن">🗑</button>
           </div>
           <div class="history-list" id="history-list"></div>
@@ -182,6 +186,8 @@
     <div class="m-sheet-head">ابزارها</div>
     <div class="m-actions">
       <button class="m-action" data-proxy="btn-find"><span class="mi">🔍</span>جستجو</button>
+      <button class="m-action" data-proxy="btn-gsearch"><span class="mi">🔎</span>جستجوی همه</button>
+      <button class="m-action" data-proxy="btn-cleanup"><span class="mi">🧹</span>پاکسازی</button>
       <button class="m-action" data-proxy="btn-theme"><span class="mi">◐</span>تم</button>
       <button class="m-action" data-proxy="btn-pomodoro"><span class="mi">⏱</span>پومودورو</button>
       <button class="m-action" data-proxy="btn-zen"><span class="mi">⛶</span>تمرکز</button>
@@ -220,6 +226,11 @@
       <div class="setting-group"><label>شفافیت ادیتور (<span id="op-val">0.9</span>)</label>
         <input type="range" id="editor-opacity" min="0.2" max="1" step="0.05" value="0.9" /></div>
       <div class="setting-group"><label class="chk"><input type="checkbox" id="typewriter-mode" /> حالت ماشین‌تحریر (تمرکز روی خط جاری)</label></div>
+      <div class="setting-group"><label>پشتیبان‌گیری کامل (همه سندها و تنظیمات)</label>
+        <div class="seg-row">
+          <button class="btn sm" id="btn-backup">📦 گرفتن پشتیبان</button>
+          <button class="btn sm" id="btn-restore">↩ بازیابی</button>
+        </div></div>
       <div class="modal-btns"><button class="btn btn-primary" data-close="settings-modal">بستن</button></div>
     </div>
   </div>
@@ -247,10 +258,32 @@
     <button class="icon-btn" id="find-close">✕</button>
   </div>
 
+  <div id="gsearch-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head"><h3>جستجوی سراسری</h3><button class="icon-btn" data-close="gsearch-modal">✕</button></div>
+      <input type="text" id="gsearch-input" class="field" placeholder="جستجو در همه سندها..." />
+      <div id="gsearch-results" class="gsearch-results"></div>
+    </div>
+  </div>
+
+  <div id="kbd-bar" class="kbd-bar">
+    <button data-k="bold" title="پررنگ"><b>B</b></button>
+    <button data-k="italic" title="مورب"><i>I</i></button>
+    <button data-k="underline" title="زیرخط"><u>U</u></button>
+    <button data-k="h2" title="تیتر">H₂</button>
+    <button data-k="ul" title="لیست نقطه‌ای">•</button>
+    <button data-k="ol" title="لیست شماره‌ای">۱.</button>
+    <button data-k="link" title="پیوند">🔗</button>
+    <button data-k="clean" title="پاکسازی">🧹</button>
+    <button data-k="undo" title="واگرد">↶</button>
+    <button data-k="redo" title="ازنو">↷</button>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
 
   <input type="file" id="img-input" hidden accept="image/*" />
   <input type="file" id="import-input" hidden accept=".txt,.md,.html,.htm" />
+  <input type="file" id="restore-input" hidden accept="application/json,.json" />
 </div>
 
 <script src="js/db.js"></script>
@@ -265,5 +298,6 @@
 <script src="js/mobile.js"></script>
 <script src="js/panels.js"></script>
 <script src="js/app.js"></script>
+<script src="js/features.js"></script>
 </body>
 </html>
