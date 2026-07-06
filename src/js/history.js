@@ -42,7 +42,9 @@ window.renderHistory = function () {
     const realIdx = tab.history.length - 1 - idx;
     const item = document.createElement('div');
     item.className = 'history-item';
-    item.innerHTML = `<div class="h-time">${entry.time}</div><div class="h-action">${entry.action}</div>`;
+    const _pv = (entry.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 42);
+    const _pvSafe = _pv.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    item.innerHTML = `<div class="h-time">${entry.time}</div><div class="h-action">${entry.action}</div>` + (_pv ? `<div class="h-preview">${_pvSafe}…</div>` : '');
     item.addEventListener('click', () => {
       const e = tab.history[realIdx];
       document.getElementById('visual-editor').innerHTML = e.content;
