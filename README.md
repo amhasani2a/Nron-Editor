@@ -2,7 +2,7 @@
 
 # Nron Editor
 
-**یک استودیوی نوشتن سریع، آفلاین و کاملاً فارسی (RTL) — با هسته‌ی Rust**
+**یک برنامه نوشتن سریع، آفلاین و فارسی — با هسته‌ی Rust**
 
 A fast, offline-first, RTL-native writing studio powered by a Rust core and Tauri v2.
 
@@ -16,9 +16,9 @@ A fast, offline-first, RTL-native writing studio powered by a Rust core and Taur
 
 ## فارسی
 
-**Nron Editor** یک ادیتور حرفه‌ای نوشتن (مقاله / داستان / رمان) است که کاملاً آفلاین کار می‌کند. هسته‌ی محاسباتی آن (شمارش، جستجو، تبدیل مارک‌داون، ساخت EPUB) با **Rust** نوشته شده تا سریع باشد، و رابط کاربری آن کاملاً **ریسپانسیو** و مناسب موبایل است.
+**Nron Editor** یک ادیتور  نوشتن ( است که کاملاً آفلاین کار می‌کند. هسته‌ی محاسباتی آن (شمارش، جستجو، تبدیل مارک‌داون، ساخت EPUB) با **Rust** نوشته شده تا سریع باشد، و رابط کاربری آن کاملاً **ریسپانسیو** و مناسب موبایل است.
 
-### اجرای سریع (دسکتاپ)
+### اجرا (دسکتاپ)
 
 ```bash
 # پیش‌نیاز: Rust (rustup) + Tauri CLI
@@ -30,25 +30,6 @@ cargo tauri dev      # اجرای توسعه
 cargo tauri build    # ساخت نسخه‌ی نهایی ویندوز
 ```
 
-### ساخت خودکار روی گیت‌هاب (ویندوز + اندروید)
-
-پروژه را روی گیت‌هاب بگذار و یک **تگ نسخه** بزن:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-ورک‌فلوی `.github/workflows/release.yml` به‌صورت خودکار:
-1. هسته‌ی Rust را برای **ویندوز** کامپایل می‌کند و `.msi` و `.exe` می‌سازد.
-2. هسته را برای **اندروید** کامپایل می‌کند و `.apk` می‌سازد.
-3. یک **Release** با خروجی‌ها منتشر می‌کند.
-
-می‌توانی از تب **Actions** هم دستی اجرایش کنی (دکمه‌ی *Run workflow*).
-
-> ⚠️ برای انتشار رسمی روی Google Play باید APK/AAB را با کلید امضا (keystore) امضا کنی. خروجی پیش‌فرض debug/unsigned است و برای تست روی گوشی مناسب است.
-
----
 
 ## English
 
@@ -76,4 +57,5 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/FEATURES.md`](docs
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+GNU GENERAL PUBLIC LICENSE
+ — see [LICENSE](LICENSE).
