@@ -1,4 +1,3 @@
-// User settings, persisted to the settings store and reapplied on load.
 window.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('settings-modal');
   document.getElementById('btn-settings').addEventListener('click', () => modal.classList.remove('hidden'));
@@ -9,7 +8,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const setVar = (k, v) => root.style.setProperty(k, v);
   const save = (key, value) => dbPut('settings', { key, value });
 
-  // Theme (header toggle + segmented control)
   const applyTheme = (t) => {
     root.setAttribute('data-theme', t);
     save('theme', t);
@@ -21,7 +19,6 @@ window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#seg-theme button').forEach(b =>
     b.addEventListener('click', () => applyTheme(b.getAttribute('data-theme-val'))));
 
-  // Direction
   const applyDir = (d) => {
     setVar('--editor-dir', d);
     document.documentElement.setAttribute('dir', d);
@@ -32,28 +29,24 @@ window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#seg-dir button').forEach(b =>
     b.addEventListener('click', () => applyDir(b.getAttribute('data-dir-val'))));
 
-  // Font size
   const fs = document.getElementById('font-size');
   fs.addEventListener('input', e => {
     setVar('--editor-fs', e.target.value + 'px');
     document.getElementById('fs-val').textContent = e.target.value;
     save('font_size', e.target.value);
   });
-  // Line height
   const lh = document.getElementById('line-height');
   lh.addEventListener('input', e => {
     setVar('--editor-lh', e.target.value);
     document.getElementById('lh-val').textContent = e.target.value;
     save('line_height', e.target.value);
   });
-  // Opacity
   const op = document.getElementById('editor-opacity');
   op.addEventListener('input', e => {
     setVar('--editor-bg-opacity', e.target.value);
     document.getElementById('op-val').textContent = e.target.value;
     save('bg_opacity', e.target.value);
   });
-  // Background image
   const bgFile = document.getElementById('bg-file');
   bgFile.addEventListener('change', (e) => {
     const f = e.target.files[0];
@@ -65,15 +58,14 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-clear-bg').addEventListener('click', () => {
     setVar('--bg-image', 'none'); dbDelete('settings', 'bg_image'); bgFile.value = '';
   });
-  // Typewriter mode
   const tw = document.getElementById('typewriter-mode');
   tw.addEventListener('change', e => {
     document.getElementById('app').classList.toggle('typewriter', e.target.checked);
     save('typewriter', e.target.checked);
   });
 
-  // Restore persisted settings.
   (async () => {
+    await window.dbReady;
     const all = await dbGetAll('settings');
     const get = (k) => all.find(s => s.key === k);
     const theme = get('theme'); if (theme) applyTheme(theme.value); else applyTheme('dark');

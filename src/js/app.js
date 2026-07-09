@@ -1,5 +1,3 @@
-// Main controller: bootstrap, document tabs, editor commands, autosave.
-
 const state = {
   tabs: [],
   activeTabId: null,
@@ -12,6 +10,7 @@ const DOM = {};
 
 const AUTOSAVE_MS = 700;
 let typingTimer = null;
+let loadedTabId = null;
 
 window.addEventListener('DOMContentLoaded', async () => {
   Object.assign(DOM, {
@@ -26,7 +25,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     pomodoroDisplay: document.getElementById('pomodoro-display'),
   });
 
-  await initDB();
+  await window.dbReady;
   await loadState();
   if (state.tabs.length === 0) await createNewTab();
 
@@ -38,7 +37,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   await updateStats();
 
   const info = await NronCore.coreInfo();
-  DOM.statusMsg.textContent = info.native ? `آماده · هسته Rust ${info.version || ''}` : 'آماده';
+  DOM.statusMsg.textContent = info.native ? `\u0622\u0645\u0627\u062f\u0647 \u00b7 \u0647\u0633\u062a\u0647 Rust ${info.version || ''}` : '\u0622\u0645\u0627\u062f\u0647';
 });
 
 async function loadState() {
@@ -81,7 +80,7 @@ function setupEventListeners() {
 
   DOM.visualEditor.addEventListener('input', () => {
     updateStats();
-    scheduleSave('تایپ');
+    scheduleSave('\u062a\u0627\u06cc\u067e');
   });
   DOM.visualEditor.addEventListener('keyup', () => { updateToolbarState(); typewriterScroll(); });
   DOM.visualEditor.addEventListener('mouseup', updateToolbarState);
@@ -97,8 +96,6 @@ function scheduleSave(action) {
   }, AUTOSAVE_MS);
 }
 
-// The webview can be killed without a beforeunload, especially on Android, so
-// persist eagerly whenever the app is backgrounded or the editor loses focus.
 function setupAutosaveGuards() {
   const flush = () => { clearTimeout(typingTimer); saveCurrentTab(); };
   DOM.visualEditor.addEventListener('blur', flush);
@@ -108,8 +105,8 @@ function setupAutosaveGuards() {
 }
 
 async function createNewTab() {
-  const tab = { id: Date.now(), title: 'سند جدید', content: '<h1>سند جدید</h1><p></p>', history: [] };
-  window.addToHistory?.(tab, 'ایجاد');
+  const tab = { id: Date.now(), title: '\u0633\u0646\u062f \u062c\u062f\u06cc\u062f', content: '<h1>\u0633\u0646\u062f \u062c\u062f\u06cc\u062f</h1><p></p>', history: [] };
+  window.addToHistory?.(tab, '\u0627\u06cc\u062c\u0627\u062f');
   state.tabs.push(tab);
   await dbPut('tabs', tab);
   await switchTab(tab.id);
@@ -125,8 +122,6 @@ function renderTabs() {
     name.className = 'doc-tab-name';
     name.textContent = tab.title;
 
-    // Single tap switches; double-tap renames. Keeping the title read-only by
-    // default is what makes tab switching reliable on touch screens.
     el.addEventListener('click', () => { if (name.isContentEditable) return; switchTab(tab.id); });
     name.addEventListener('dblclick', (e) => {
       e.stopPropagation();
@@ -139,7 +134,7 @@ function renderTabs() {
 
     const close = document.createElement('span');
     close.className = 'close-tab';
-    close.textContent = '×';
+    close.textContent = '\u00d7';
     close.addEventListener('click', (e) => { e.stopPropagation(); closeTab(tab.id); });
 
     el.append(name, close);
@@ -157,6 +152,7 @@ async function switchTab(id) {
   if (!tab) return;
   DOM.visualEditor.innerHTML = tab.content;
   DOM.sourceEditor.value = tab.content;
+  loadedTabId = id;
   applySourceModeView();
   renderTabs();
   window.renderHistory?.();
@@ -171,7 +167,7 @@ function applySourceModeView() {
 }
 
 async function saveCurrentTab() {
-  const tab = state.tabs.find(t => t.id === state.activeTabId);
+  const tab = state.tabs.find(t => t.id === loadedTabId);
   if (!tab) return;
   tab.content = state.isSourceMode ? DOM.sourceEditor.value : DOM.visualEditor.innerHTML;
   await dbPut('tabs', tab);
@@ -180,9 +176,9 @@ async function saveCurrentTab() {
 async function forceSave() {
   clearTimeout(typingTimer);
   await saveCurrentTab();
-  window.trackChange?.('ذخیره دستی');
-  DOM.statusMsg.textContent = 'ذخیره شد ✓';
-  setTimeout(() => (DOM.statusMsg.textContent = 'آماده'), 1800);
+  window.trackChange?.('\u0630\u062e\u06cc\u0631\u0647 \u062f\u0633\u062a\u06cc');
+  DOM.statusMsg.textContent = '\u0630\u062e\u06cc\u0631\u0647 \u0634\u062f \u2713';
+  setTimeout(() => (DOM.statusMsg.textContent = '\u0622\u0645\u0627\u062f\u0647'), 1800);
 }
 
 async function renameTab(id, title) {
@@ -194,7 +190,7 @@ async function renameTab(id, title) {
 }
 
 async function closeTab(id) {
-  if (state.tabs.length <= 1) { toast('حداقل یک سند لازم است'); return; }
+  if (state.tabs.length <= 1) { toast('\u062d\u062f\u0627\u0642\u0644 \u06cc\u06a9 \u0633\u0646\u062f \u0644\u0627\u0632\u0645 \u0627\u0633\u062a'); return; }
   state.tabs = state.tabs.filter(t => t.id !== id);
   await dbDelete('tabs', id);
   if (state.activeTabId === id) await switchTab(state.tabs[state.tabs.length - 1].id);
@@ -213,7 +209,7 @@ function executeCommand(cmd, val = null) {
 function updateToolbarState() {
   document.querySelectorAll('.format-btn').forEach(btn => {
     try { btn.classList.toggle('active', document.queryCommandState(btn.getAttribute('data-cmd'))); }
-    catch { /* queryCommandState throws for some commands; ignore */ }
+    catch {}
   });
 }
 
@@ -236,7 +232,7 @@ function togglePomodoro() {
     clearInterval(state.pomodoroInterval);
     state.pomodoroInterval = null;
     state.pomodoroTime = 1500;
-    disp.textContent = '۲۵:۰۰';
+    disp.textContent = '\u06f2\u06f5:\u06f0\u06f0';
     disp.classList.remove('running');
     return;
   }
@@ -245,14 +241,14 @@ function togglePomodoro() {
     state.pomodoroTime--;
     const m = Math.floor(state.pomodoroTime / 60), s = state.pomodoroTime % 60;
     disp.textContent = toFa(`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
-    if (state.pomodoroTime <= 0) { togglePomodoro(); toast('وقت استراحت است! ☕'); }
+    if (state.pomodoroTime <= 0) { togglePomodoro(); toast('\u0648\u0642\u062a \u0627\u0633\u062a\u0631\u0627\u062d\u062a \u0627\u0633\u062a! \u2615'); }
   }, 1000);
 }
 
 function insertTable() {
   if (state.isSourceMode) return;
-  const rows = parseInt(prompt('تعداد سطر:', '3'), 10);
-  const cols = parseInt(prompt('تعداد ستون:', '3'), 10);
+  const rows = parseInt(prompt('\u062a\u0639\u062f\u0627\u062f \u0633\u0637\u0631:', '3'), 10);
+  const cols = parseInt(prompt('\u062a\u0639\u062f\u0627\u062f \u0633\u062a\u0648\u0646:', '3'), 10);
   if (!(rows > 0) || !(cols > 0)) return;
   let html = '<table><tbody>';
   for (let i = 0; i < rows; i++) {
@@ -264,7 +260,7 @@ function insertTable() {
 
 function insertLink() {
   if (state.isSourceMode) return;
-  const url = prompt('آدرس پیوند (URL):', 'https://');
+  const url = prompt('\u0622\u062f\u0631\u0633 \u067e\u06cc\u0648\u0646\u062f (URL):', 'https://');
   if (url) executeCommand('createLink', url);
 }
 
@@ -291,7 +287,7 @@ async function handleImport(e) {
   await dbPut('tabs', tab);
   await switchTab(tab.id);
   e.target.value = '';
-  toast('فایل وارد شد');
+  toast('\u0641\u0627\u06cc\u0644 \u0648\u0627\u0631\u062f \u0634\u062f');
 }
 
 function escapeText(s) {
@@ -300,9 +296,9 @@ function escapeText(s) {
 
 async function updateStats() {
   const s = await NronCore.stats(DOM.visualEditor.innerText || '');
-  DOM.wordCount.textContent = `کلمات: ${toFa(s.words)}`;
-  DOM.charCount.textContent = `نویسه: ${toFa(s.chars_no_space)}`;
-  DOM.readTime.textContent = `مطالعه: ${toFa(s.reading_time_min)} دقیقه`;
+  DOM.wordCount.textContent = `\u06a9\u0644\u0645\u0627\u062a: ${toFa(s.words)}`;
+  DOM.charCount.textContent = `\u0646\u0648\u06cc\u0633\u0647: ${toFa(s.chars_no_space)}`;
+  DOM.readTime.textContent = `\u0645\u0637\u0627\u0644\u0639\u0647: ${toFa(s.reading_time_min)} \u062f\u0642\u06cc\u0642\u0647`;
 }
 
 function typewriterScroll() {
@@ -326,5 +322,5 @@ function toast(msg) {
 }
 
 function toFa(v) {
-  return String(v).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  return String(v).replace(/[0-9]/g, d => '\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9'[d]);
 }
