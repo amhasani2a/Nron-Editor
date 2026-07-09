@@ -1,28 +1,18 @@
-/*
- * features.js — lightweight add-ons, wired after app.js so `state`/`DOM` exist.
- *   1) Global search across ALL documents
- *   2) Persian cleanup (ZWNJ / nim-fasele + Arabic يك → یک)
- *   3) Full backup / restore (JSON, non-destructive merge)
- *   4) Manual version snapshot
- *   5) Mobile above-keyboard formatting bar
- * (Typewriter mode already lives in app.js + style.css.)
- */
+// Add-ons loaded after app.js: global search, Persian cleanup, backup/restore,
+// manual snapshots, and the on-keyboard formatting bar for mobile.
 window.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   const editor = DOM.visualEditor || $('visual-editor');
 
-  /* ---------- shared helpers ---------- */
   const escapeHtml = (s) => (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const stripHtml = (html) => { const d = document.createElement('div'); d.innerHTML = html || ''; return (d.innerText || d.textContent || '').replace(/\s+/g, ' ').trim(); };
-  // Normalize Arabic ي/ك + digits so search & compare are consistent.
+  // Fold Arabic ي/ك and digits so search and title compare are consistent.
   const norm = (s) => (s || '')
     .replace(/\u064A/g, '\u06CC').replace(/\u0643/g, '\u06A9')
     .replace(/[\u0660-\u0669]/g, d => '\u06F0\u06F1\u06F2\u06F3\u06F4\u06F5\u06F6\u06F7\u06F8\u06F9'[d.charCodeAt(0) - 0x0660])
     .toLowerCase();
 
-  /* =========================================================
-   * 1) GLOBAL SEARCH
-   * ======================================================= */
+  // Global search across all documents.
   const gModal = $('gsearch-modal'), gInput = $('gsearch-input'), gResults = $('gsearch-results');
 
   function openGsearch() {
@@ -40,14 +30,14 @@ window.addEventListener('DOMContentLoaded', () => {
     await saveCurrentTab();
     const nq = norm(q);
     let total = 0;
-    state.tabs.forEach(tab => {
+    for (const tab of state.tabs) {
       const text = stripHtml(tab.content);
       const hay = norm(text);
       const inTitle = norm(tab.title).indexOf(nq) !== -1;
-      let idx = hay.indexOf(nq);
-      if (idx === -1 && !inTitle) return;
-      let count = 0, i = idx;
-      while (i !== -1) { count++; i = hay.indexOf(nq, i + nq.length); }
+      const idx = hay.indexOf(nq);
+      if (idx === -1 && !inTitle) continue;
+      // Match counting is offloaded to the Rust core (JS fallback inside).
+      const count = (await NronCore.searchInHtml(hay, nq)).length;
       const pos = idx === -1 ? 0 : idx;
       const snippet = text.slice(Math.max(0, pos - 24), pos + 40) || '\u0628\u062f\u0648\u0646 \u0645\u062a\u0646';
       const item = document.createElement('div');
@@ -65,7 +55,7 @@ window.addEventListener('DOMContentLoaded', () => {
       });
       gResults.appendChild(item);
       total++;
-    });
+    }
     if (!total) gResults.innerHTML = '<div class="gs-empty">\u0646\u062a\u06cc\u062c\u0647\u200c\u0627\u06cc \u067e\u06cc\u062f\u0627 \u0646\u0634\u062f</div>';
   }
 
@@ -79,9 +69,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) { e.preventDefault(); openGsearch(); }
   });
 
-  /* =========================================================
-   * 2) PERSIAN CLEANUP (ZWNJ / nim-fasele + يك → یک)
-   * ======================================================= */
+  // Persian cleanup: normalize Arabic letters/digits and insert ZWNJ (nim-fasele)
+  // for the می/نمی prefix and the ها/تر suffixes.
   const ZWNJ = '\u200c';
   const L = '\u0622-\u06CC'; // Persian/Arabic letter range
   function fixPersian(t) {
@@ -109,9 +98,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   if ($('btn-cleanup')) $('btn-cleanup').addEventListener('click', cleanupCurrentDoc);
 
-  /* =========================================================
-   * 3) BACKUP / RESTORE (JSON, non-destructive merge)
-   * ======================================================= */
+  // Backup/restore. Restore merges by id so it never wipes existing docs.
   async function doBackup() {
     const [tabs, articles, settings] = await Promise.all([dbGetAll('tabs'), dbGetAll('articles'), dbGetAll('settings')]);
     const data = { app: 'Nron Editor', schema: 1, exportedAt: new Date().toISOString(), tabs, articles, settings };
@@ -137,9 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if ($('btn-restore')) $('btn-restore').addEventListener('click', () => $('restore-input') && $('restore-input').click());
   if ($('restore-input')) $('restore-input').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) doRestore(f); e.target.value = ''; });
 
-  /* =========================================================
-   * 4) MANUAL SNAPSHOT
-   * ======================================================= */
+  // Manual version snapshot.
   if ($('btn-snapshot')) $('btn-snapshot').addEventListener('click', () => {
     saveCurrentTab();
     window.trackChange && window.trackChange('\u0646\u0633\u062e\u0647 \u062f\u0633\u062a\u06cc');
@@ -147,9 +132,7 @@ window.addEventListener('DOMContentLoaded', () => {
     toast('\u2714 \u0646\u0633\u062e\u0647 \u062b\u0628\u062a \u0634\u062f');
   });
 
-  /* =========================================================
-   * 5) MOBILE ABOVE-KEYBOARD FORMATTING BAR
-   * ======================================================= */
+  // Formatting bar pinned above the on-screen keyboard (mobile only).
   const kbar = $('kbd-bar');
   const vv = window.visualViewport;
   let edFocused = false;

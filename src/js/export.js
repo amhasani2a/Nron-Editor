@@ -1,19 +1,19 @@
-/* Export: PDF, DOCX, EPUB (real, via Rust core when available), MD, HTML, TXT.
- *
- * Uses the NATIVE OS Save dialog + filesystem when running inside Tauri
- * (Windows / Android), so the file is written exactly WHERE THE USER CHOOSES
- * and we report the real path in the toast. In a plain browser (preview / QA)
- * it falls back to a normal blob download. */
+// Export to PDF, DOCX, EPUB, Markdown, HTML and plain text.
+// Inside Tauri we write through the native save dialog; in a browser we fall
+// back to a blob download.
+
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-export]').forEach(b =>
     b.addEventListener('click', () => doExport(b.getAttribute('data-export'))));
 });
 
 function activeTab() {
-  if (!state.activeTabId) return null;
-  return state.tabs.find(t => t.id === state.activeTabId) || null;
+  return state.activeTabId ? state.tabs.find(t => t.id === state.activeTabId) || null : null;
 }
-function sanitize(name) { return (name || 'document').replace(/[\\/:*?"<>|]/g, '_').trim() || 'document'; }
+
+function sanitize(name) {
+  return (name || 'document').replace(/[\\/:*?"<>|]/g, '_').trim() || 'document';
+}
 
 function extFilter(name) {
   const ext = (name.split('.').pop() || '').toLowerCase();
@@ -21,51 +21,28 @@ function extFilter(name) {
   return [{ name: label, extensions: [ext] }];
 }
 
-/*
- * Central save routine.
- *   data       : string (text) OR Uint8Array (binary)
- *   name       : suggested file name incl. extension
- *   opts.binary: true for Uint8Array payloads (e.g. EPUB)
- *   opts.mime  : MIME type for the browser fallback
- */
+const isAndroid = () => /android/i.test(navigator.userAgent || '');
+
 async function saveOut(data, name, opts = {}) {
   const T = window.__TAURI__;
   if (T && T.fs) {
     const fs = T.fs, dlg = T.dialog;
     try {
-      let path = null;
-      if (dlg && typeof dlg.save === 'function') {
-        // Native "Save As" (Windows) / document picker (Android SAF).
-        path = await dlg.save({ defaultPath: name, filters: extFilter(name) });
-        if (path === null || path === undefined) { toast('ذخیره لغو شد'); return; }
-      }
+      const path = dlg?.save ? await dlg.save({ defaultPath: name, filters: extFilter(name) }) : null;
+      if (dlg?.save && path == null) { toast('ذخیره لغو شد'); return; }
       if (path) {
-        if (opts.binary) await fs.writeFile(path, data);
-        else await fs.writeTextFile(path, data);
+        opts.binary ? await fs.writeFile(path, data) : await fs.writeTextFile(path, data);
         toast('✔ ذخیره شد:\n' + path);
         return;
       }
-      // No dialog available → drop into the Download folder and report it.
-      const bd = fs.BaseDirectory.Download;
-      if (opts.binary) await fs.writeFile(name, data, { baseDir: bd });
-      else await fs.writeTextFile(name, data, { baseDir: bd });
-      toast('✔ ذخیره شد در پوشه Download:\n' + name);
-      return;
+      await writeToDownloads(fs, data, name, opts);
     } catch (e) {
-      // Last resort: Download folder.
-      try {
-        const bd = fs.BaseDirectory.Download;
-        if (opts.binary) await fs.writeFile(name, data, { baseDir: bd });
-        else await fs.writeTextFile(name, data, { baseDir: bd });
-        toast('✔ ذخیره شد در پوشه Download:\n' + name);
-      } catch (e2) {
-        toast('✖ خطا در ذخیره: ' + (e2 && e2.message ? e2.message : e2));
-      }
-      return;
+      try { await writeToDownloads(fs, data, name, opts); }
+      catch (e2) { toast('✖ خطا در ذخیره: ' + (e2?.message || e2)); }
     }
+    return;
   }
-  // Browser fallback (preview / QA).
-  const blob = opts.binary ? new Blob([data]) : new Blob([data], { type: opts.mime || 'text/plain' });
+  const blob = new Blob([data], opts.binary ? {} : { type: opts.mime || 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = name; a.click();
@@ -73,27 +50,47 @@ async function saveOut(data, name, opts = {}) {
   toast('دانلود شد: ' + name);
 }
 
+async function writeToDownloads(fs, data, name, opts) {
+  const baseDir = fs.BaseDirectory.Download;
+  opts.binary ? await fs.writeFile(name, data, { baseDir }) : await fs.writeTextFile(name, data, { baseDir });
+  toast('✔ ذخیره شد در پوشه Download:\n' + name);
+}
+
 async function doExport(kind) {
   const tab = activeTab();
   if (!tab) { toast('سندی باز نیست'); return; }
   const title = sanitize(tab.title);
   document.querySelector('.dropdown')?.classList.remove('open');
-  if (kind === 'pdf') return exportPDF(tab);
-  if (kind === 'docx') return exportDOCX(tab, title);
-  if (kind === 'epub') return exportEPUB(tab, title);
-  if (kind === 'md') {
-    const md = await NronCore.htmlToMarkdown(tab.content);
-    await saveOut(md, title + '.md', { mime: 'text/markdown' });
-  } else if (kind === 'html') {
-    const doc = `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>${tab.title}</title></head><body>${tab.content}</body></html>`;
-    await saveOut(doc, title + '.html', { mime: 'text/html' });
-  } else if (kind === 'txt') {
-    const tmp = document.createElement('div'); tmp.innerHTML = tab.content;
-    await saveOut(tmp.innerText, title + '.txt', { mime: 'text/plain' });
+
+  switch (kind) {
+    case 'pdf': return exportPDF(tab, title);
+    case 'docx': return exportDOCX(tab, title);
+    case 'epub': return exportEPUB(tab, title);
+    case 'md': return saveOut(await NronCore.htmlToMarkdown(tab.content), title + '.md', { mime: 'text/markdown' });
+    case 'html': return saveOut(pageHtml(tab), title + '.html', { mime: 'text/html' });
+    case 'txt': {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = tab.content;
+      return saveOut(tmp.innerText, title + '.txt', { mime: 'text/plain' });
+    }
   }
 }
 
-function exportPDF(tab) {
+function pageHtml(tab) {
+  return `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>${tab.title}</title>` +
+    `<style>@page{margin:2cm}body{font-family:'Vazirmatn',Tahoma,sans-serif;direction:rtl;line-height:1.9;font-size:16px;max-width:800px;margin:auto;padding:24px}img{max-width:100%}</style>` +
+    `</head><body>${tab.content}</body></html>`;
+}
+
+// window.print() opens the browser print-to-PDF dialog on desktop WebView2, but
+// Android's WebView has no print support, so there we save a print-ready HTML
+// the user opens and prints from Chrome.
+function exportPDF(tab, title) {
+  if (window.__TAURI__ && isAndroid()) {
+    saveOut(pageHtml(tab), title + '.html', { mime: 'text/html' });
+    toast('فایل آمادهٔ چاپ ذخیره شد. در مرورگر باز کن ← Print ← Save as PDF');
+    return;
+  }
   const original = document.title;
   document.title = tab.title;
   window.print();
@@ -101,9 +98,8 @@ function exportPDF(tab) {
 }
 
 async function exportDOCX(tab, title) {
-  const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body{font-family:'Vazirmatn',Tahoma;direction:rtl}</style></head><body>";
-  const src = '\ufeff' + header + tab.content + '</body></html>';
-  await saveOut(src, title + '.doc', { mime: 'application/msword' });
+  const head = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>body{font-family:'Vazirmatn',Tahoma;direction:rtl}</style></head><body>";
+  await saveOut('\ufeff' + head + tab.content + '</body></html>', title + '.doc', { mime: 'application/msword' });
 }
 
 async function exportEPUB(tab, title) {
@@ -115,6 +111,6 @@ async function exportEPUB(tab, title) {
     await saveOut(bytes, title + '.epub', { binary: true });
     return;
   }
-  const html = `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="fa" dir="rtl"><head><title>${tab.title}</title><meta charset="utf-8"/></head><body><h1>${tab.title}</h1>${tab.content}</body></html>`;
-  await saveOut(html, title + '.epub', { mime: 'application/epub+zip' });
+  const xhtml = `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="fa" dir="rtl"><head><title>${tab.title}</title><meta charset="utf-8"/></head><body><h1>${tab.title}</h1>${tab.content}</body></html>`;
+  await saveOut(xhtml, title + '.epub', { mime: 'application/epub+zip' });
 }

@@ -1,4 +1,5 @@
-/* IndexedDB persistence layer (offline-first). */
+// IndexedDB storage. Three stores keyed by their own id/key (no relations):
+//   tabs (id) · articles (id) · settings (key)
 const DB_NAME = 'NronDB';
 const DB_VERSION = 2;
 window.db = null;

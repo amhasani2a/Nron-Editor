@@ -1,7 +1,5 @@
-/* Mobile / Android UX — deliberately different from the desktop (Windows) layout.
-   Side panels and the formatting toolbar are presented as Material-style bottom
-   sheets with a dimmed backdrop, swipe-to-close, a bottom navigation bar, a
-   "more" menu sheet, and a floating action button for creating a document. */
+// Mobile UX: side panels and the toolbar become bottom sheets with a backdrop,
+// swipe-to-close, a bottom nav bar, a "more" sheet, and a FAB for new documents.
 window.addEventListener('DOMContentLoaded', () => {
   const backdrop = document.getElementById('sheet-backdrop');
   const sidebar = document.getElementById('sidebar');
@@ -26,8 +24,7 @@ window.addEventListener('DOMContentLoaded', () => {
     markNav(null);
   }
 
-  // Toggle a sheet. `useOpenClass` picks the .open class (more-sheet) vs
-  // .mobile-open (reused desktop panels). Returns true if it ended up open.
+  // useOpenClass picks .open (more-sheet) vs .mobile-open (reused panels).
   function toggleSheet(el, useOpenClass) {
     if (!el) return false;
     const cls = useOpenClass ? 'open' : 'mobile-open';

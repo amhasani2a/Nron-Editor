@@ -1,17 +1,10 @@
-/*
- * core-bridge.js
- * Bridges the frontend to the Rust core exposed via Tauri commands.
- * When running inside Tauri (desktop/Android), heavy operations (word stats,
- * search, markdown, EPUB packaging) are handled by the compiled Rust core for
- * speed. When running in a plain browser (e.g. preview / QA), it transparently
- * falls back to pure-JS implementations so the UI keeps working everywhere.
- */
+// Bridge to the Rust core. Inside Tauri, heavy work (stats, search, markdown,
+// EPUB) runs natively; in a plain browser it falls back to JS.
 window.NronCore = (function () {
   const hasTauri = typeof window.__TAURI__ !== 'undefined'
     && window.__TAURI__.core && typeof window.__TAURI__.core.invoke === 'function';
   const invoke = hasTauri ? window.__TAURI__.core.invoke : null;
 
-  // Persian/Arabic digit normalization for consistent counting.
   const toEnDigits = (s) => s.replace(/[\u06f0-\u06f9]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
                               .replace(/[\u0660-\u0669]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 
@@ -22,7 +15,6 @@ window.NronCore = (function () {
     const charsNoSpace = (text || '').replace(/\s/g, '').length;
     const sentences = (t.match(/[.!?؟۔\n]+/g) || []).length;
     const paragraphs = t ? t.split(/\n{2,}/).filter(s => s.trim()).length : 0;
-    // Persian avg reading speed ~ 200 wpm.
     const readingTime = Math.max(0, Math.ceil(words / 200));
     return { words, chars, chars_no_space: charsNoSpace, sentences, paragraphs, reading_time_min: readingTime };
   }

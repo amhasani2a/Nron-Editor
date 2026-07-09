@@ -1,12 +1,6 @@
-/* Vazirmatn variable font (self-hosted, offline). */
-@font-face {
-  font-family: 'Vazirmatn';
-  src: url('Vazirmatn[wght].woff2') format('woff2-variations'),
-       url('Vazirmatn-Regular.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
+/* Self-hosted Vazirmatn. Static weights only: the variable file shipped with a
+   bracketed name that some WebViews refuse to load, so we map the weights we
+   actually use to plain-named files. */
 @font-face {
   font-family: 'Vazirmatn';
   src: url('Vazirmatn-Regular.woff2') format('woff2');
@@ -16,15 +10,15 @@
 }
 @font-face {
   font-family: 'Vazirmatn';
-  src: url('Vazirmatn-Bold.woff2') format('woff2');
-  font-weight: 700;
+  src: url('Vazirmatn-Medium.woff2') format('woff2');
+  font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Vazirmatn';
-  src: url('Vazirmatn-Medium.woff2') format('woff2');
-  font-weight: 500;
+  src: url('Vazirmatn-Bold.woff2') format('woff2');
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }

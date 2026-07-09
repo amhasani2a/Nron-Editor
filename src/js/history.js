@@ -1,4 +1,4 @@
-/* Per-document version history (git-like snapshots). */
+// Per-document version snapshots kept on the tab itself.
 window.addEventListener('DOMContentLoaded', () => {
   const clearBtn = document.getElementById('btn-clear-history');
   if (clearBtn) clearBtn.addEventListener('click', () => {

@@ -1,4 +1,4 @@
-/* Settings: theme, font size, line height, direction, background, opacity, typewriter. */
+// User settings, persisted to the settings store and reapplied on load.
 window.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('settings-modal');
   document.getElementById('btn-settings').addEventListener('click', () => modal.classList.remove('hidden'));

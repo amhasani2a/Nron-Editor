@@ -1,4 +1,4 @@
-/* Find & Replace. Uses the Rust core for match indexing when available. */
+// In-document find & replace with highlighted hits.
 let findState = { hits: [], current: -1 };
 
 window.addEventListener('DOMContentLoaded', () => {

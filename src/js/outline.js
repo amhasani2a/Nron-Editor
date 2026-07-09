@@ -1,4 +1,4 @@
-/* Auto table-of-contents built from headings in the active document. */
+// Table of contents built from the headings in the active document.
 window.renderOutline = function () {
   const list = document.getElementById('outline-list');
   if (!list) return;

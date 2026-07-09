@@ -1,10 +1,7 @@
-/* =============================================================
-   NRON — Astryx-inspired GLASS layer (glassmorphism)
-   Pure CSS-variable cascade. Loaded AFTER style.css so it wins.
-   Works on Windows (WebView2) + Android (Chromium WebView).
-   ============================================================= */
+/* Glassmorphism layer. Loaded after style.css so it overrides base surfaces.
+   Heavy blur is disabled on small screens for performance (see bottom). */
 
-/* ---- Glass design tokens (dark) ---- */
+/* Dark tokens */
 :root{
   --glass-bg:      rgba(18, 26, 36, 0.55);
   --glass-bg-2:    rgba(28, 40, 52, 0.48);
@@ -24,7 +21,7 @@
   --glass-shadow:  0 14px 44px rgba(31, 45, 61, 0.18);
 }
 
-/* ---- Aurora backdrop so the blur has something beautiful to show ---- */
+/* Aurora backdrop behind the frosted surfaces */
 body::after{
   content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
   background:
@@ -36,7 +33,6 @@ body::after{
 }
 [data-theme="light"] body::after{ filter:saturate(130%) brightness(1.05) }
 
-/* ---- Helper: the frosted-glass recipe ---- */
 .header,
 .toolbar,
 .doc-tabs,
@@ -123,4 +119,22 @@ body::after{
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .header,.toolbar,.doc-tabs,.sidebar,.source-panel{ background:var(--surface) }
   .dropdown-content,.modal,.find-bar,.bottom-nav,.m-sheet{ background:var(--surface) }
+}
+
+/* Live backdrop-filter on many stacked layers is the main cause of jank on
+   mid-range Android. Drop it there and use solid surfaces instead. */
+@media (max-width:860px){
+  body::after{ display:none }
+  .header,.toolbar,.doc-tabs,.sidebar,.source-panel,
+  .dropdown-content,.modal,.find-bar,
+  .bottom-nav,.m-sheet,.m-action,.fab,
+  .sidebar.mobile-open,.source-panel.mobile-open,.toolbar.mobile-open,
+  .btn,.toolbar select,.sidebar select,.doc-tab.active{
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+  }
+  .header,.toolbar,.doc-tabs{ background:var(--surface) }
+  .sidebar,.source-panel,.bottom-nav,.m-sheet,
+  .sidebar.mobile-open,.source-panel.mobile-open,.toolbar.mobile-open{ background:var(--surface-2) }
+  .modal,.dropdown-content,.find-bar{ background:var(--surface-2) }
 }

@@ -19,7 +19,16 @@
   <header class="header">
     <button class="icon-btn only-mobile" id="btn-menu" aria-label="منو" title="منو">☰</button>
     <div class="brand">
-      <img src="assets/logo.png" alt="" class="brand-logo" onerror="this.style.display='none'" />
+      <svg class="brand-logo" viewBox="0 0 32 32" width="26" height="26" role="img" aria-label="Nron">
+        <defs>
+          <linearGradient id="nron-mark" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#00d3c7" />
+            <stop offset="1" stop-color="#2783de" />
+          </linearGradient>
+        </defs>
+        <rect x="1.6" y="1.6" width="28.8" height="28.8" rx="8" fill="none" stroke="url(#nron-mark)" stroke-width="2.4" />
+        <path d="M10 23 V9 L22 23 V9" fill="none" stroke="url(#nron-mark)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
       <span class="brand-name">Nron</span>
     </div>
 

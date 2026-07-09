@@ -1,5 +1,5 @@
-/* Desktop-only: collapsible + mouse-resizable side panels (sidebar & references).
-   Widths and collapsed state persist across sessions via localStorage. */
+// Desktop side panels: collapse toggles and drag-to-resize, persisted in
+// localStorage.
 (function () {
   const LS = window.localStorage;
   const varFor = (id) => (id === 'sidebar' ? '--sidebar-w' : '--rightpanel-w');
@@ -69,24 +69,20 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    // Restore saved widths.
     ['sidebar', 'source-panel'].forEach((id) => {
       const w = LS.getItem(widthKey(id));
       if (w) document.documentElement.style.setProperty(varFor(id), w);
       if (LS.getItem(collapseKey(id)) === '1') setCollapsed(id, true);
     });
 
-    // Collapse buttons inside panels.
     document.querySelectorAll('[data-collapse]').forEach((b) =>
       b.addEventListener('click', () => toggleCollapse(b.getAttribute('data-collapse'))));
 
-    // Toolbar toggle buttons.
     const bl = document.getElementById('btn-panel-left');
     if (bl) bl.addEventListener('click', () => toggleCollapse('sidebar'));
     const br = document.getElementById('btn-panel-right');
     if (br) br.addEventListener('click', () => toggleCollapse('source-panel'));
 
-    // Drag-to-resize handles.
     document.querySelectorAll('.resizer').forEach(setupResizer);
   });
 })();

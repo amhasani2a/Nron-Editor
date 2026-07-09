@@ -1,4 +1,4 @@
-/* Keyboard shortcuts. */
+// Global keyboard shortcuts.
 window.addEventListener('keydown', (e) => {
   const ctrl = e.ctrlKey || e.metaKey;
   if (!ctrl) {

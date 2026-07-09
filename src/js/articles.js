@@ -1,4 +1,4 @@
-/* Articles / references side panel. */
+// Reference articles shown in the right-hand panel.
 const artState = { articles: [], activeId: null };
 let artDOM = {};
 
