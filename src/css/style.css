@@ -6,7 +6,7 @@
   --header-h:52px; --toolbar-h:46px; --tabs-h:38px; --status-h:30px;
   --sidebar-w:260px; --rightpanel-w:280px;
   --editor-font:'Vazirmatn'; --editor-fs:18px; --editor-lh:1.9;
-  --editor-dir:rtl; --editor-bg-opacity:0.9; --bg-image:none;
+  --editor-dir:rtl; --editor-bg-opacity:0.7; --bg-image:none;
   --font-ui:'Vazirmatn', Tahoma, system-ui, sans-serif;
 }
 [data-theme="light"]{
