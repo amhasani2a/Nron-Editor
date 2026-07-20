@@ -1,5 +1,3 @@
-// Mobile UX: side panels and the toolbar become bottom sheets with a backdrop,
-// swipe-to-close, a bottom nav bar, a "more" sheet, and a FAB for new documents.
 window.addEventListener('DOMContentLoaded', () => {
   const backdrop = document.getElementById('sheet-backdrop');
   const sidebar = document.getElementById('sidebar');
@@ -9,7 +7,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const editor = document.getElementById('visual-editor');
 
   const panelSheets = [sidebar, rightPanel, toolbar];
-  const allSheets = [sidebar, rightPanel, toolbar, moreSheet];
 
   function markNav(activeBtn) {
     document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
@@ -24,7 +21,6 @@ window.addEventListener('DOMContentLoaded', () => {
     markNav(null);
   }
 
-  // useOpenClass picks .open (more-sheet) vs .mobile-open (reused panels).
   function toggleSheet(el, useOpenClass) {
     if (!el) return false;
     const cls = useOpenClass ? 'open' : 'mobile-open';
@@ -39,11 +35,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (backdrop) backdrop.addEventListener('click', closeAll);
 
-  // Hamburger (top-left) opens the "more" menu sheet.
   const menuBtn = document.getElementById('btn-menu');
   if (menuBtn) menuBtn.addEventListener('click', () => { toggleSheet(moreSheet, true); markNav(null); });
 
-  // Floating action button -> new document.
   const fab = document.getElementById('fab-new');
   if (fab) fab.addEventListener('click', () => {
     closeAll();
@@ -51,7 +45,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (b) b.click();
   });
 
-  // Bottom navigation.
   document.querySelectorAll('.bottom-nav button').forEach(btn => {
     btn.addEventListener('click', () => {
       const nav = btn.getAttribute('data-nav');
@@ -63,12 +56,10 @@ window.addEventListener('DOMContentLoaded', () => {
         switchSidebarPanel('outline');
         window.renderOutline && window.renderOutline();
         markNav(toggleSheet(sidebar) ? btn : null);
-        return;
       }
     });
   });
 
-  // "More" sheet: proxy buttons trigger the real (desktop-only, hidden) controls.
   document.querySelectorAll('#more-sheet [data-proxy]').forEach(b => {
     b.addEventListener('click', () => {
       const target = document.getElementById(b.getAttribute('data-proxy'));
@@ -76,23 +67,32 @@ window.addEventListener('DOMContentLoaded', () => {
       if (target) target.click();
     });
   });
-  // Export buttons inside the sheet are handled by export.js; just close after.
   document.querySelectorAll('#more-sheet [data-export]').forEach(b => {
     b.addEventListener('click', () => setTimeout(closeAll, 0));
   });
 
-  // Starting to type closes any open sheet.
   if (editor) editor.addEventListener('focus', () => { if (window.innerWidth <= 860) closeAll(); });
 
-  // Swipe-down to dismiss the open sheet.
   let startY = null, dragEl = null;
   const openSheetEl = () =>
     document.querySelector('.m-sheet.open, .sidebar.mobile-open, .source-panel.mobile-open, .toolbar.mobile-open');
+  const scrolledInner = (node, limit) => {
+    let el = node instanceof Element ? node : node ? node.parentElement : null;
+    while (el && el !== limit) {
+      if (el.scrollHeight > el.clientHeight + 1 && el.scrollTop > 0) return true;
+      el = el.parentElement;
+    }
+    return false;
+  };
   document.addEventListener('touchstart', (e) => {
-    if (window.innerWidth > 860) { startY = null; return; }
-    dragEl = openSheetEl();
-    if (dragEl && e.touches.length === 1 && dragEl.scrollTop <= 0) startY = e.touches[0].clientY;
-    else startY = null;
+    startY = null;
+    dragEl = null;
+    if (window.innerWidth > 860 || e.touches.length !== 1) return;
+    const sheet = openSheetEl();
+    if (!sheet || !sheet.contains(e.target)) return;
+    if (sheet.scrollTop > 0 || scrolledInner(e.target, sheet)) return;
+    dragEl = sheet;
+    startY = e.touches[0].clientY;
   }, { passive: true });
   document.addEventListener('touchmove', (e) => {
     if (startY === null || !dragEl) return;
@@ -104,7 +104,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const dy = e.changedTouches[0].clientY - startY;
     dragEl.style.transform = '';
     if (dy > 90) closeAll();
-    startY = null; dragEl = null;
+    startY = null;
+    dragEl = null;
   }, { passive: true });
 });
 

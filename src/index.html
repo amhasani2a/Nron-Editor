@@ -15,7 +15,6 @@
 <body>
 <div class="app" id="app">
 
-  <!-- ============ HEADER / TOP BAR ============ -->
   <header class="header">
     <button class="icon-btn only-mobile" id="btn-menu" aria-label="منو" title="منو">☰</button>
     <div class="brand">
@@ -60,7 +59,6 @@
     </div>
   </header>
 
-  <!-- ============ FORMATTING TOOLBAR ============ -->
   <div class="toolbar" id="toolbar">
     <div class="tool-group">
       <button class="icon-btn only-desktop" id="btn-panel-left" title="نمایش/بستن پنل کناری">▥</button>
@@ -109,13 +107,10 @@
     </div>
   </div>
 
-  <!-- ============ DOCUMENT TABS ============ -->
   <div class="doc-tabs" id="doc-tabs"></div>
 
-  <!-- ============ WORKSPACE ============ -->
   <div class="workspace" id="workspace">
 
-    <!-- Left sidebar: history + outline -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-tabs">
         <button class="sidebar-tab active" data-panel="history">تغییرات</button>
@@ -138,19 +133,15 @@
       </div>
     </aside>
 
-    <!-- Resizer between sidebar and editor -->
     <div class="resizer only-desktop" data-resize="sidebar" title="کشیدن برای تغییر اندازه"></div>
 
-    <!-- Editor -->
     <main class="editor-wrapper" id="editor-wrapper">
       <div id="visual-editor" contenteditable="true" spellcheck="false" dir="auto"></div>
       <textarea id="source-editor" spellcheck="false" dir="ltr"></textarea>
     </main>
 
-    <!-- Resizer between editor and right panel -->
     <div class="resizer only-desktop" data-resize="source-panel" title="کشیدن برای تغییر اندازه"></div>
 
-    <!-- Right panel: articles / references -->
     <aside class="source-panel" id="source-panel">
       <div class="panel-header">
         <span class="panel-title">مقالات و منابع</span>
@@ -164,7 +155,6 @@
     </aside>
   </div>
 
-  <!-- ============ STATUS BAR ============ -->
   <footer class="statusbar">
     <span id="status-msg">آماده</span>
     <div class="status-stats">
@@ -176,7 +166,6 @@
     </div>
   </footer>
 
-  <!-- ============ MOBILE BOTTOM NAV ============ -->
   <nav class="bottom-nav only-mobile" id="bottom-nav">
     <button data-nav="editor" class="active">✎<span>نوشتن</span></button>
     <button data-nav="outline">☰<span>فهرست</span></button>
@@ -185,7 +174,6 @@
     <button data-nav="format">✱<span>قالب</span></button>
   </nav>
 
-  <!-- ============ MOBILE BOTTOM SHEETS (Android-specific UI) ============ -->
   <div class="sheet-backdrop only-mobile" id="sheet-backdrop"></div>
 
   <button class="fab only-mobile" id="fab-new" aria-label="سند جدید" title="سند جدید">＋</button>
@@ -215,7 +203,6 @@
     </div>
   </div>
 
-  <!-- ============ MODALS ============ -->
   <div id="settings-modal" class="modal-overlay hidden">
     <div class="modal">
       <div class="modal-head"><h3>تنظیمات</h3><button class="icon-btn" data-close="settings-modal">✕</button></div>
@@ -232,8 +219,8 @@
       <div class="setting-group"><label>تصویر پس‌زمینه</label>
         <input type="file" id="bg-file" accept="image/*" />
         <button class="btn sm" id="btn-clear-bg">حذف پس‌زمینه</button></div>
-      <div class="setting-group"><label>شفافیت ادیتور (<span id="op-val">0.9</span>)</label>
-        <input type="range" id="editor-opacity" min="0.2" max="1" step="0.05" value="0.9" /></div>
+      <div class="setting-group"><label>شفافیت ادیتور (<span id="op-val">0.7</span>)</label>
+        <input type="range" id="editor-opacity" min="0.2" max="1" step="0.05" value="0.7" /></div>
       <div class="setting-group"><label class="chk"><input type="checkbox" id="typewriter-mode" /> حالت ماشین‌تحریر (تمرکز روی خط جاری)</label></div>
       <div class="setting-group"><label>پشتیبان‌گیری کامل (همه سندها و تنظیمات)</label>
         <div class="seg-row">
@@ -286,6 +273,10 @@
     <button data-k="clean" title="پاکسازی">🧹</button>
     <button data-k="undo" title="واگرد">↶</button>
     <button data-k="redo" title="ازنو">↷</button>
+  </div>
+
+  <div id="ask-modal" class="modal-overlay hidden">
+    <div class="modal"></div>
   </div>
 
   <div id="toast" class="toast hidden"></div>

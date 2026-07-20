@@ -1,4 +1,3 @@
-// Per-document version snapshots kept on the tab itself.
 window.addEventListener('DOMContentLoaded', () => {
   const clearBtn = document.getElementById('btn-clear-history');
   if (clearBtn) clearBtn.addEventListener('click', () => {
@@ -17,8 +16,13 @@ window.trackChange = function (actionName) {
     : document.getElementById('visual-editor').innerHTML;
   const last = tab.history[tab.history.length - 1];
   if (last && last.content === current) return;
-  tab.history.push({ id: Date.now(), time: new Date().toLocaleTimeString('fa-IR'), action: actionName, content: current });
-  if (tab.history.length > 100) tab.history.shift();
+  if (actionName === 'تایپ' && last && last.action === 'تایپ' && Date.now() - last.id < 120000) {
+    last.content = current;
+    last.time = new Date().toLocaleTimeString('fa-IR');
+  } else {
+    tab.history.push({ id: Date.now(), time: new Date().toLocaleTimeString('fa-IR'), action: actionName, content: current });
+    if (tab.history.length > 100) tab.history.shift();
+  }
   const panel = document.getElementById('panel-history');
   if (panel && panel.classList.contains('active')) window.renderHistory();
 };
@@ -42,9 +46,9 @@ window.renderHistory = function () {
     const realIdx = tab.history.length - 1 - idx;
     const item = document.createElement('div');
     item.className = 'history-item';
-    const _pv = (entry.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 42);
-    const _pvSafe = _pv.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    item.innerHTML = `<div class="h-time">${entry.time}</div><div class="h-action">${entry.action}</div>` + (_pv ? `<div class="h-preview">${_pvSafe}…</div>` : '');
+    const preview = (entry.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 42);
+    const previewSafe = preview.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    item.innerHTML = `<div class="h-time">${entry.time}</div><div class="h-action">${entry.action}</div>` + (preview ? `<div class="h-preview">${previewSafe}…</div>` : '');
     item.addEventListener('click', () => {
       const e = tab.history[realIdx];
       document.getElementById('visual-editor').innerHTML = e.content;

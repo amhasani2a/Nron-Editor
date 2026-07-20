@@ -391,3 +391,10 @@ input[type=range]{accent-color:var(--accent); width:100%}
 ::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-dim)}
 ::-webkit-scrollbar-track{background:transparent}
+
+body.typing .bottom-nav,body.typing .fab{display:none}
+body.typing #visual-editor,body.typing #source-editor{padding-bottom:72px}
+@media (max-width:860px){
+  .doc-tab{min-height:42px}
+  .doc-tab .close-tab{font-size:19px; padding:2px 8px}
+}

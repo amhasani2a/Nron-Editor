@@ -56,8 +56,12 @@ function setupEventListeners() {
   document.getElementById('btn-zen').addEventListener('click', toggleZenMode);
   document.getElementById('btn-pomodoro').addEventListener('click', togglePomodoro);
   document.getElementById('btn-outline').addEventListener('click', () => {
+    if (window.innerWidth <= 860) {
+      const b = document.querySelector('.bottom-nav button[data-nav="outline"]');
+      if (b) b.click();
+      return;
+    }
     switchSidebarPanel('outline');
-    if (window.innerWidth <= 860) document.getElementById('sidebar').classList.add('mobile-open');
   });
   document.getElementById('btn-link').addEventListener('click', insertLink);
 
@@ -123,12 +127,15 @@ function renderTabs() {
     name.textContent = tab.title;
 
     el.addEventListener('click', () => { if (name.isContentEditable) return; switchTab(tab.id); });
-    name.addEventListener('dblclick', (e) => {
+    const startRename = (e) => {
+      e.preventDefault();
       e.stopPropagation();
       name.contentEditable = 'true';
       name.focus();
       document.execCommand('selectAll', false, null);
-    });
+    };
+    name.addEventListener('dblclick', startRename);
+    name.addEventListener('contextmenu', startRename);
     name.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); name.blur(); } });
     name.addEventListener('blur', () => { name.contentEditable = 'false'; renameTab(tab.id, name.textContent); });
 
@@ -245,23 +252,97 @@ function togglePomodoro() {
   }, 1000);
 }
 
-function insertTable() {
+let savedRange = null;
+
+function saveSelection() {
+  const sel = window.getSelection();
+  savedRange = sel.rangeCount && DOM.visualEditor.contains(sel.anchorNode)
+    ? sel.getRangeAt(0).cloneRange()
+    : null;
+}
+
+function restoreSelection() {
+  DOM.visualEditor.focus();
+  if (!savedRange) return;
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+}
+
+function askDialog(title, fields) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('ask-modal');
+    const box = overlay.querySelector('.modal');
+    box.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'modal-head';
+    const h = document.createElement('h3');
+    h.textContent = title;
+    head.appendChild(h);
+    box.appendChild(head);
+    const inputs = fields.map((f) => {
+      const inp = document.createElement('input');
+      inp.className = 'field';
+      inp.type = f.type || 'text';
+      if (f.type === 'number') inp.inputMode = 'numeric';
+      inp.placeholder = f.label;
+      inp.value = f.value || '';
+      inp.dir = f.dir || 'auto';
+      box.appendChild(inp);
+      return inp;
+    });
+    const btns = document.createElement('div');
+    btns.className = 'modal-btns';
+    const ok = document.createElement('button');
+    ok.className = 'btn btn-primary';
+    ok.textContent = 'تأیید';
+    const cancel = document.createElement('button');
+    cancel.className = 'btn';
+    cancel.textContent = 'لغو';
+    btns.append(ok, cancel);
+    box.appendChild(btns);
+    const close = (vals) => { overlay.classList.add('hidden'); resolve(vals); };
+    ok.onclick = () => close(inputs.map((i) => i.value.trim()));
+    cancel.onclick = () => close(null);
+    overlay.onclick = (e) => { if (e.target === overlay) close(null); };
+    inputs.forEach((inp) => inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); ok.click(); }
+      if (e.key === 'Escape') close(null);
+    }));
+    overlay.classList.remove('hidden');
+    setTimeout(() => inputs[0] && inputs[0].focus(), 60);
+  });
+}
+
+async function insertTable() {
   if (state.isSourceMode) return;
-  const rows = parseInt(prompt('\u062a\u0639\u062f\u0627\u062f \u0633\u0637\u0631:', '3'), 10);
-  const cols = parseInt(prompt('\u062a\u0639\u062f\u0627\u062f \u0633\u062a\u0648\u0646:', '3'), 10);
-  if (!(rows > 0) || !(cols > 0)) return;
+  saveSelection();
+  const vals = await askDialog('درج جدول', [
+    { label: 'تعداد سطر', type: 'number', value: '3' },
+    { label: 'تعداد ستون', type: 'number', value: '3' },
+  ]);
+  if (!vals) return;
+  const rows = Math.min(50, parseInt(vals[0], 10) || 0);
+  const cols = Math.min(20, parseInt(vals[1], 10) || 0);
+  if (rows < 1 || cols < 1) return;
+  restoreSelection();
   let html = '<table><tbody>';
-  for (let i = 0; i < rows; i++) {
-    html += '<tr>' + '<td>&nbsp;</td>'.repeat(cols) + '</tr>';
-  }
+  for (let i = 0; i < rows; i++) html += '<tr>' + '<td>&nbsp;</td>'.repeat(cols) + '</tr>';
   html += '</tbody></table><p></p>';
   executeCommand('insertHTML', html);
 }
 
-function insertLink() {
+async function insertLink() {
   if (state.isSourceMode) return;
-  const url = prompt('\u0622\u062f\u0631\u0633 \u067e\u06cc\u0648\u0646\u062f (URL):', 'https://');
-  if (url) executeCommand('createLink', url);
+  saveSelection();
+  const vals = await askDialog('افزودن پیوند', [
+    { label: 'آدرس پیوند', value: 'https://', dir: 'ltr' },
+  ]);
+  const url = vals && vals[0];
+  if (!url || url === 'https://') return;
+  restoreSelection();
+  if (savedRange && !savedRange.collapsed) executeCommand('createLink', url);
+  else executeCommand('insertHTML', `<a href="${url.replace(/"/g, '&quot;')}">${escapeText(url)}</a>`);
 }
 
 function handleImageUpload(e) {

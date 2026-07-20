@@ -11,6 +11,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const applyTheme = (t) => {
     root.setAttribute('data-theme', t);
     save('theme', t);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#0b0f14' : '#f5f6f8');
     document.querySelectorAll('#seg-theme button').forEach(b =>
       b.classList.toggle('active', b.getAttribute('data-theme-val') === t));
   };

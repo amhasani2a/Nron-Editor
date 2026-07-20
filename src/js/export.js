@@ -1,7 +1,3 @@
-// Export to PDF, DOCX, EPUB, Markdown, HTML and plain text.
-// Inside Tauri we write through the native save dialog; in a browser we fall
-// back to a blob download.
-
 window.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-export]').forEach(b =>
     b.addEventListener('click', () => doExport(b.getAttribute('data-export'))));
@@ -45,7 +41,9 @@ async function saveOut(data, name, opts = {}) {
   const blob = new Blob([data], opts.binary ? {} : { type: opts.mime || 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = name; a.click();
+  a.href = url;
+  a.download = name;
+  a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
   toast('دانلود شد: ' + name);
 }
@@ -57,6 +55,8 @@ async function writeToDownloads(fs, data, name, opts) {
 }
 
 async function doExport(kind) {
+  clearTimeout(typingTimer);
+  await saveCurrentTab();
   const tab = activeTab();
   if (!tab) { toast('سندی باز نیست'); return; }
   const title = sanitize(tab.title);
@@ -82,9 +82,6 @@ function pageHtml(tab) {
     `</head><body>${tab.content}</body></html>`;
 }
 
-// window.print() opens the browser print-to-PDF dialog on desktop WebView2, but
-// Android's WebView has no print support, so there we save a print-ready HTML
-// the user opens and prints from Chrome.
 function exportPDF(tab, title) {
   if (window.__TAURI__ && isAndroid()) {
     saveOut(pageHtml(tab), title + '.html', { mime: 'text/html' });

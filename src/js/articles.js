@@ -1,4 +1,3 @@
-// Reference articles shown in the right-hand panel.
 const artState = { articles: [], activeId: null };
 let artDOM = {};
 
@@ -13,6 +12,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-add-article').addEventListener('click', () => artDOM.modal.classList.remove('hidden'));
   document.getElementById('btn-save-article').addEventListener('click', saveNewArticle);
 
+  await window.dbReady;
   const saved = await dbGetAll('articles');
   if (saved && saved.length > 0) {
     artState.articles = saved;
@@ -31,21 +31,24 @@ async function saveNewArticle() {
   const newArt = { id: Date.now(), title: t, content: formatted };
   artState.articles.push(newArt);
   await dbPut('articles', newArt);
-  artDOM.title.value = ''; artDOM.content.value = '';
+  artDOM.title.value = '';
+  artDOM.content.value = '';
   artDOM.modal.classList.add('hidden');
   renderArticles();
   switchArticle(newArt.id);
   toast('منبع ذخیره شد');
 }
 
-function escapeHtml(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function escapeHtml(s) {
+  return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
 
 function renderArticles() {
   artDOM.tabs.innerHTML = '';
   artState.articles.forEach(art => {
     const t = document.createElement('div');
     t.className = `art-tab ${art.id === artState.activeId ? 'active' : ''}`;
-    t.innerHTML = `<span>${art.title}</span> <span class="del-art">×</span>`;
+    t.innerHTML = `<span>${escapeHtml(art.title)}</span> <span class="del-art">×</span>`;
     t.addEventListener('click', (e) => {
       if (e.target.classList.contains('del-art')) deleteArticle(art.id);
       else switchArticle(art.id);
@@ -58,7 +61,7 @@ function switchArticle(id) {
   artState.activeId = id;
   const art = artState.articles.find(a => a.id === id);
   artDOM.viewer.innerHTML = art
-    ? `<h3>${art.title}</h3><hr>${art.content}`
+    ? `<h3>${escapeHtml(art.title)}</h3><hr>${art.content}`
     : '<div style="color:var(--text-dim);font-size:13px;">منبعی انتخاب نشده.</div>';
   renderArticles();
 }
