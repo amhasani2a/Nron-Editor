@@ -1,0 +1,1 @@
+{"identifier":"desktop-updater","description":"Signed desktop updates only; publisher key required.","windows":["main"],"platforms":["windows","linux","macOS"],"permissions":["updater:default"]}
