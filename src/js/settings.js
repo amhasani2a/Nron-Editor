@@ -70,12 +70,12 @@ window.addEventListener('DOMContentLoaded', () => {
     await window.dbReady;
     const all = await dbGetAll('settings');
     const get = (k) => all.find(s => s.key === k);
-    const theme = get('theme'); if (theme) applyTheme(theme.value); else applyTheme('dark');
+    const theme = get('theme'); if (theme) applyTheme(theme.value); else applyTheme(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
     const dir = get('dir'); if (dir) applyDir(dir.value); else applyDir('rtl');
     const g = get('font_size'); if (g) { setVar('--editor-fs', g.value + 'px'); fs.value = g.value; document.getElementById('fs-val').textContent = g.value; }
     const l = get('line_height'); if (l) { setVar('--editor-lh', l.value); lh.value = l.value; document.getElementById('lh-val').textContent = l.value; }
     const o = get('bg_opacity'); if (o) { setVar('--editor-bg-opacity', o.value); op.value = o.value; document.getElementById('op-val').textContent = o.value; }
-    const bg = get('bg_image'); if (bg) setVar('--bg-image', `url('${bg.value}')`);
+    const bg = get('bg_image'); if (bg && /^data:image\/(png|jpeg|webp|gif);base64,/.test(bg.value)) setVar('--bg-image', `url('${bg.value}')`);
     const t = get('typewriter'); if (t && t.value) { tw.checked = true; document.getElementById('app').classList.add('typewriter'); }
   })();
 });

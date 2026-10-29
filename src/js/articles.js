@@ -61,7 +61,7 @@ function switchArticle(id) {
   artState.activeId = id;
   const art = artState.articles.find(a => a.id === id);
   artDOM.viewer.innerHTML = art
-    ? `<h3>${escapeHtml(art.title)}</h3><hr>${art.content}`
+    ? `<h3>${escapeHtml(art.title)}</h3><hr>${NronSafety.html(art.content)}`
     : '<div style="color:var(--text-dim);font-size:13px;">منبعی انتخاب نشده.</div>';
   renderArticles();
 }

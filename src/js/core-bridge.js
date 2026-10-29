@@ -11,9 +11,9 @@ window.NronCore = (function () {
   function jsStats(text) {
     const t = (text || '').trim();
     const words = t ? t.split(/\s+/).filter(Boolean).length : 0;
-    const chars = (text || '').length;
-    const charsNoSpace = (text || '').replace(/\s/g, '').length;
-    const sentences = (t.match(/[.!?؟۔\n]+/g) || []).length;
+    const chars = Array.from(text || '').length;
+    const charsNoSpace = Array.from((text || '').replace(/\s/g, '')).length;
+    const sentences = words ? Math.max(1,(t.match(/[.!?؟۔\n]/g) || []).length) : 0;
     const paragraphs = t ? t.split(/\n{2,}/).filter(s => s.trim()).length : 0;
     const readingTime = Math.max(0, Math.ceil(words / 200));
     return { words, chars, chars_no_space: charsNoSpace, sentences, paragraphs, reading_time_min: readingTime };
@@ -27,7 +27,7 @@ window.NronCore = (function () {
   async function markdownToHtml(md) {
     if (invoke) { try { return await invoke('markdown_to_html', { markdown: md || '' }); } catch (e) {} }
     // minimal fallback
-    return (md || '')
+    return (md || '').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
       .replace(/^### (.*)$/gm, '<h3>$1</h3>')
       .replace(/^## (.*)$/gm, '<h2>$1</h2>')
       .replace(/^# (.*)$/gm, '<h1>$1</h1>')

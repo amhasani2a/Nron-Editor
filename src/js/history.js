@@ -48,10 +48,10 @@ window.renderHistory = function () {
     item.className = 'history-item';
     const preview = (entry.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 42);
     const previewSafe = preview.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    item.innerHTML = `<div class="h-time">${entry.time}</div><div class="h-action">${entry.action}</div>` + (preview ? `<div class="h-preview">${previewSafe}…</div>` : '');
+    item.innerHTML = `<div class="h-time">${escapeText(String(entry.time||""))}</div><div class="h-action">${escapeText(String(entry.action||""))}</div>` + (preview ? `<div class="h-preview">${previewSafe}…</div>` : '');
     item.addEventListener('click', () => {
       const e = tab.history[realIdx];
-      document.getElementById('visual-editor').innerHTML = e.content;
+      document.getElementById('visual-editor').innerHTML = NronSafety.html(e.content);
       document.getElementById('source-editor').value = e.content;
       tab.content = e.content;
       dbPut('tabs', tab);
