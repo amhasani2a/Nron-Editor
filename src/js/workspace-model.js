@@ -1,192 +1,208 @@
-/**
- * Nron Editor - Workspace State Model
- * مدیریت تب‌ها و پنجره‌های موازی (Sliding Panes کنار هم به سبک Obsidian)
- */
+window.NronWorkspaceModel = (() => {
+  const looks = [
+    { id: "paper", name: "کاغذ آرام" },
+    { id: "ink", name: "مرکب" },
+    { id: "mist", name: "مه صبحگاهی" },
+    { id: "forest", name: "جنگل" },
+    { id: "sepia", name: "سپیا" },
+    { id: "midnight", name: "نیمه‌شب" },
+  ];
 
-(function (global) {
-  'use strict';
+  const templates = [
+    {
+      id: "blank-note",
+      name: "یادداشت آزاد",
+      category: "عمومی",
+      content: "<h1>یادداشت آزاد</h1><p>ایده یا متن خود را بنویسید…</p>",
+    },
+    {
+      id: "daily-journal",
+      name: "روزنوشت",
+      category: "روزانه",
+      content:
+        "<h1>روزنوشت</h1><h2>مهم‌ترین کارهای امروز</h2><ul><li></li></ul><h2>یادداشت‌ها</h2><p></p>",
+    },
+    {
+      id: "meeting-notes",
+      name: "صورت‌جلسه",
+      category: "کاری",
+      content:
+        "<h1>یادداشت جلسه</h1><p><b>حاضران:</b> </p><h2>موضوعات مطرح‌شده</h2><ul><li></li></ul><h2>تصمیم‌ها و پیگیری</h2><ul><li></li></ul>",
+    },
+    {
+      id: "article-draft",
+      name: "پیش‌نویس مقاله",
+      category: "پژوهش",
+      content:
+        "<h1>عنوان مقاله</h1><h2>چکیده</h2><p></p><h2>مقدمه</h2><p></p><h2>بدنه اصلی</h2><p></p><h2>نتیجه‌گیری</h2><p></p>",
+    },
+    {
+      id: "book-chapter",
+      name: "فصل کتاب",
+      category: "داستان و کتاب",
+      content:
+        "<h1>فصل اول: عنوان فصل</h1><blockquote>نقل‌قول یا مدخل فصل…</blockquote><p></p>",
+    },
+    {
+      id: "story-scene",
+      name: "پرده داستان",
+      category: "داستان و کتاب",
+      content:
+        "<h1>پرده جدید</h1><p><b>مکان و زمان:</b> </p><p><b>شخصیت‌ها:</b> </p><h2>روایت</h2><p></p>",
+    },
+    {
+      id: "research-card",
+      name: "فیش پژوهشی",
+      category: "پژوهش",
+      content:
+        "<h1>فیش پژوهشی</h1><p><b>منبع:</b> </p><h2>نقل‌قول یا خلاصه</h2><blockquote></blockquote><h2>برداشت شخصی</h2><p></p>",
+    },
+    {
+      id: "project-plan",
+      name: "طرح پروژه",
+      category: "کاری",
+      content:
+        "<h1>طرح پروژه</h1><h2>هدف</h2><p></p><h2>مراحل اجرا</h2><ol><li></li></ol><h2>ریسک‌ها و وابستگی‌ها</h2><p></p>",
+    },
+    {
+      id: "weekly-review",
+      name: "مرور هفتگی",
+      category: "روزانه",
+      content:
+        "<h1>مرور هفتگی</h1><h2>دستاوردهای هفته</h2><ul><li></li></ul><h2>چالش‌ها</h2><ul><li></li></ul><h2>برنامه هفته آینده</h2><ul><li></li></ul>",
+    },
+    {
+      id: "lecture-notes",
+      name: "جزوه کلاس و سخنرانی",
+      category: "پژوهش",
+      content:
+        "<h1>یادداشت درس</h1><p><b>استاد / سخنران:</b> </p><h2>نکات کلیدی</h2><ul><li></li></ul><h2>پرسش‌ها و مرور</h2><p></p>",
+    },
+    {
+      id: "letter-formal",
+      name: "نامه رسمی",
+      category: "کاری",
+      content:
+        "<h1>موضوع: </h1><p>با سلام و احترام،</p><p></p><p>با سپاس</p>",
+    },
+    {
+      id: "checklist-doc",
+      name: "چک‌لیست اقدام",
+      category: "عمومی",
+      content:
+        "<h1>فهرست کارها</h1><ul><li>[ ] مورد اول</li><li>[ ] مورد دوم</li></ul>",
+    },
+  ];
 
-  const STORAGE_KEY = 'nron_workspace_state_v2';
-
-  function generateId() {
-    return 'doc_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+  function stamp(tab) {
+    return Number(tab?.createdAt) || Number(tab?.id) || 0;
   }
 
-  class WorkspaceModel {
-    constructor() {
-      this.panes = [];
-      this.activePaneId = null;
-      this.layoutMode = 'sliding'; // 'sliding' (کنار هم اسکرول افقی مثل ابسیدین) | 'split'
-      this.listeners = new Set();
-      this.load();
-    }
-
-    load() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed.panes) && parsed.panes.length > 0) {
-            this.panes = parsed.panes;
-            this.activePaneId = parsed.activePaneId || this.panes[0].id;
-            this.layoutMode = parsed.layoutMode || 'sliding';
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('[WorkspaceModel] خطا در بازیابی وضعیت:', err);
-      }
-
-      // وضعیت پیش‌فرض اولیه با یک سند
-      const initialPane = this.createPaneObject({
-        title: 'سند جدید',
-        content: 'سند جدید'
-      });
-      this.panes = [initialPane];
-      this.activePaneId = initialPane.id;
-    }
-
-    save() {
-      try {
-        const payload = {
-          panes: this.panes,
-          activePaneId: this.activePaneId,
-          layoutMode: this.layoutMode,
-          updatedAt: Date.now()
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      } catch (err) {
-        console.warn('[WorkspaceModel] خطا در ذخیره‌سازی وضعیت:', err);
-      }
-    }
-
-    subscribe(listener) {
-      if (typeof listener === 'function') {
-        this.listeners.add(listener);
-      }
-      return () => this.listeners.delete(listener);
-    }
-
-    notify(reason = 'update', meta = {}) {
-      this.save();
-      this.listeners.forEach((fn) => {
-        try {
-          fn(this.getState(), reason, meta);
-        } catch (err) {
-          console.error('[WorkspaceModel] خطا در اجرای شنونده:', err);
-        }
-      });
-    }
-
-    getState() {
-      return {
-        panes: [...this.panes],
-        activePaneId: this.activePaneId,
-        activePane: this.getActivePane(),
-        layoutMode: this.layoutMode
-      };
-    }
-
-    createPaneObject(data = {}) {
-      const indexNumber = this.panes.length + 1;
-      const defaultTitle = indexNumber === 1 ? 'سند جدید' : `سند جدید ${indexNumber}`;
-      return {
-        id: data.id || generateId(),
-        articleId: data.articleId || null,
-        title: data.title || defaultTitle,
-        content: typeof data.content === 'string' ? data.content : (data.title || defaultTitle),
-        createdAt: data.createdAt || Date.now(),
-        updatedAt: Date.now()
-      };
-    }
-
-    getActivePane() {
-      return this.panes.find((p) => p.id === this.activePaneId) || this.panes[0] || null;
-    }
-
-    getPaneById(id) {
-      return this.panes.find((p) => p.id === id) || null;
-    }
-
-    /**
-     * افزودن سند جدید دقیقاً در کنار سند فعلی (و فعال‌سازی آن برای اسکرول افقی)
-     */
-    addPaneBesideActive(data = {}) {
-      const newPane = this.createPaneObject(data);
-      const currentIndex = this.panes.findIndex((p) => p.id === this.activePaneId);
-
-      if (currentIndex === -1) {
-        this.panes.push(newPane);
-      } else {
-        // درج بلافاصله در کنار پنجره فعلی
-        this.panes.splice(currentIndex + 1, 0, newPane);
-      }
-
-      this.activePaneId = newPane.id;
-      this.notify('pane-added', { pane: newPane, index: currentIndex + 1 });
-      return newPane;
-    }
-
-    setActivePane(id, notifyReason = 'pane-activated') {
-      if (!id || this.activePaneId === id) return;
-      const target = this.getPaneById(id);
-      if (!target) return;
-      this.activePaneId = target.id;
-      this.notify(notifyReason, { pane: target });
-    }
-
-    updatePane(id, patch = {}) {
-      const pane = this.getPaneById(id);
-      if (!pane) return null;
-
-      if (typeof patch.title === 'string') {
-        pane.title = patch.title.trim() || 'سند بی‌نام';
-      }
-      if (typeof patch.content === 'string') {
-        pane.content = patch.content;
-        // اگر عنوان جداگانه تغییر نکرده، خط اول متن به عنوان نام تب استفاده شود
-        if (!patch.title) {
-          const firstLine = patch.content
-            .replace(/<[^>]*>/g, ' ')
-            .split('\n')
-            .map((l) => l.trim())
-            .find((l) => l.length > 0);
-          if (firstLine) {
-            pane.title = firstLine.slice(0, 35);
-          }
-        }
-      }
-      pane.updatedAt = Date.now();
-      this.save();
-      this.notify('pane-updated', { pane });
-      return pane;
-    }
-
-    closePane(id) {
-      if (this.panes.length <= 1) {
-        // اگر تنها یک تب باقی مانده، محتوای آن را ریست کن
-        const onlyPane = this.panes[0];
-        onlyPane.title = 'سند جدید';
-        onlyPane.content = '';
-        onlyPane.updatedAt = Date.now();
-        this.notify('pane-reset', { pane: onlyPane });
-        return onlyPane;
-      }
-
-      const idx = this.panes.findIndex((p) => p.id === id);
-      if (idx === -1) return null;
-
-      const [removed] = this.panes.splice(idx, 1);
-      if (this.activePaneId === id) {
-        const nextPane = this.panes[idx] || this.panes[idx - 1] || this.panes[0];
-        this.activePaneId = nextPane ? nextPane.id : null;
-      }
-
-      this.notify('pane-closed', { removed, activePaneId: this.activePaneId });
-      return removed;
-    }
+  function newest(tabs = []) {
+    const active = (Array.isArray(tabs) ? tabs : []).filter(
+      (t) => t && !t.archived,
+    );
+    if (!active.length) return null;
+    return active.slice().sort((a, b) => stamp(b) - stamp(a))[0];
   }
 
-  global.WorkspaceModel = WorkspaceModel;
-  global.workspaceModel = global.workspaceModel || new WorkspaceModel();
-})(window);
+  function history(items = [], maxCount = 40, maxBytes = 2 * 1024 * 1024) {
+    if (!Array.isArray(items) || !items.length) return [];
+    const list = items.slice(-maxCount);
+    const out = [];
+    let used = 0;
+    for (let i = list.length - 1; i >= 0; i--) {
+      const entry = list[i];
+      if (!entry || typeof entry.content !== "string") continue;
+      const bytes = entry.content.length * 2;
+      if (out.length > 0 && used + bytes > maxBytes) break;
+      out.unshift(entry);
+      used += bytes;
+    }
+    return out;
+  }
+
+  function validTemplate(t) {
+    return Boolean(
+      t &&
+        typeof t === "object" &&
+        typeof t.name === "string" &&
+        t.name.trim().length > 0 &&
+        t.name.length <= 120 &&
+        typeof t.content === "string" &&
+        t.content.length > 0 &&
+        t.content.length <= 100000,
+    );
+  }
+
+  function collections(tabs = []) {
+    const set = new Set();
+    for (const t of Array.isArray(tabs) ? tabs : []) {
+      const c = typeof t?.collection === "string" ? t.collection.trim() : "";
+      if (c) set.add(c);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "fa"));
+  }
+
+  function filter(
+    tabs = [],
+    {
+      query = "",
+      status = "active",
+      collection = "",
+      sort = "created",
+      limit = 40,
+    } = {},
+  ) {
+    const q = String(query || "")
+      .trim()
+      .toLowerCase();
+    const col = String(collection || "").trim();
+    const filtered = (Array.isArray(tabs) ? tabs : []).filter((t) => {
+      if (!t) return false;
+      if (status === "active" && t.archived) return false;
+      if (status === "archived" && !t.archived) return false;
+      if (col && (t.collection || "").trim() !== col) return false;
+      if (q) {
+        const title = String(t.title || "").toLowerCase();
+        const tag = String(t.collection || "").toLowerCase();
+        if (!title.includes(q) && !tag.includes(q)) return false;
+      }
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      if (sort === "name") {
+        return String(a.title || "").localeCompare(String(b.title || ""), "fa");
+      }
+      if (sort === "edited") {
+        return (
+          (Number(b.updatedAt) || stamp(b)) - (Number(a.updatedAt) || stamp(a))
+        );
+      }
+      return stamp(b) - stamp(a);
+    });
+
+    return {
+      total: filtered.length,
+      items: filtered.slice(0, Math.max(1, Number(limit) || 40)),
+    };
+  }
+
+  function clampTimer(cfg = {}) {
+    const work = Math.max(1, Math.min(180, Math.round(Number(cfg.work) || 25)));
+    const rest = Math.max(1, Math.min(180, Math.round(Number(cfg.break) || 5)));
+    return { work, break: rest };
+  }
+
+  return {
+    looks,
+    templates,
+    newest,
+    history,
+    validTemplate,
+    collections,
+    filter,
+    clampTimer,
+  };
+})();
