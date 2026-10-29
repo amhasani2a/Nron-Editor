@@ -1,73 +1,68 @@
-# معماری Nron Editor
+# Nron 0.2 — architecture
 
-## نمای کلی
+## Goals
+Offline writing, responsive touch controls, readable RTL text, small distribution,
+explicit trust boundaries, and extensions without unrestricted code execution.
+This remains a Tauri 2 app with a vanilla JavaScript frontend. It was not replaced
+with Electron, a React dependency tree, or a second rendering engine.
 
-Nron از الگوی «هسته‌ی بومی + رابط وب» با Tauri v2 استفاده می‌کند. یک کدبیس، هم دسکتاپ (ویندوز) و هم موبایل (اندروید).
+## Layers
 
-```
-┌──────────────────────────────┐
-│            Webview (UI)            │  HTML + CSS + Vanilla JS
-│  index.html / css / js modules    │  responsive, RTL, offline
-└────────────┬──────────────┘
-              │  window.__TAURI__.core.invoke(...)
-              ▼
-┌───────────────────────────────┐
-│          Rust core (Tauri)        │  src-tauri/src
-│  count_stats · find_matches       │  fast, native
-│  markdown_to_html · html_to_markdown
-│  build_epub · core_info            │
-└───────────────────────────────┘
-```
+| Layer | Files | Contract |
+|---|---|---|
+| Document host | `src/js/app.js`, `db.js` | Existing `NronDB` v2 records; queued tab navigation; save errors propagate |
+| HTML boundary | `safety.js` + locally bundled DOMPurify | Sanitize imports, paste, saved HTML, history restore and exports; strip transient find marks |
+| Pure operations | `text-tools.js` | String in/string out; no DOM, filesystem, network or IPC; unit-tested |
+| Studio host | `studio.js` | Palette, transform preview, snapshot before replacement, plugin registry, update UI |
+| Output packaging | `formats.js`, `export.js` | Real OOXML ZIP and EPUB ZIP; explicit native save picker; print/PDF separate |
+| Rust core | `src-tauri/src/core/*` | Existing statistics/search/Markdown/EPUB commands retained; thin IPC in `lib.rs` |
+| UI | `style.css`, `features.css`, `studio.css`, `icons.js` | Tokens, reusable panels, mobile sheets, SVG icons, reduced motion |
+| Distribution | `.github/workflows/*`, `tools/update-manifest.cjs` | Quality gate; platform artifacts; optional signed desktop updates |
 
-## چرا این معماری
+## Document compatibility
+The database name/version and old numeric IDs are retained. New document IDs use
+a timestamp plus UUID, with `createdAt` for sorting. There is no destructive DB
+migration. Before installing a differently signed Android build, export a JSON
+backup from the old installation. Uninstalling an app erases its private database.
 
-- **سرعت**: محاسبات سنگین در Rust انجام می‌شود.
-- **سبکی**: برخلاف Electron، Tauri از WebView سیستم استفاده می‌کند.
-- **کراس‌پلتفرم**: یک هسته، چند هدف.
+The rich editor still uses the browser's contenteditable/execCommand stack to
+preserve existing editing behavior. This is a known maintenance risk, not a new
+ProseMirror-grade collaborative document model. HTML source mode is supported,
+but executable HTML, arbitrary form controls, remote scripts, application CSS classes, custom element IDs
+and dangerous CSS do not round-trip: this is an intentional security change.
 
-## Progressive enhancement
+## Save and navigation contract
+- A switch request joins one queue; saves the loaded document before changing DOM.
+- Typing statistics are debounced rather than invoking Rust on every keystroke.
+- Input saves after 700 ms; blur/visibility/pagehide request a flush. An OS process
+  kill before a pending IndexedDB commit may still lose the last fraction of a
+  second. No claim of crash-proof journaling is made.
+- Find highlights are never persisted. Manual snapshots are persisted after creation.
+- A backup flushes pending edits first. Restore validates the whole payload and
+  writes tabs/articles/allowed preferences in one IndexedDB transaction, after
+  explicit confirmation. It merges by ID; it is not an automatic conflict resolver.
 
-`js/core-bridge.js` وجود `window.__TAURI__` را تشخیص می‌دهد. داخل Tauri عملیات به Rust سپرده می‌شود؛ در مرورگر از پیاده‌سازی JS جایگزین استفاده می‌شود. به همین دلیل رابط کاربری بدون کامپایل Rust هم قابل اجرا و تست است.
+## Plugin v1
+See `PLUGINS.md`. Declarative recipes only. There is no eval, JS module import,
+subprocess, shell, remote dependency downloader, network grant, or direct IPC exposed
+to plugins. Future code plugins would require a separate sandbox/host protocol,
+resource limits and an explicit review; merely adding a permission string must
+never grant a capability.
 
-مواردی که امروز از Rust استفاده می‌کنند: شمارش آمار (`updateStats`)، جستجوی سراسری (`features.js`)، واردکردن Markdown، خروجی Markdown و EPUB.
+## Updates
+See `UPDATES.md`. Release discovery uses the fixed GitHub repository. Native opening
+of the release page accepts no user-controlled URL. Desktop installation uses the
+official Tauri updater only when the owner's public key is compiled into the build.
+Android uses normal user-approved installation and a persistent signing identity.
 
-## ذخیره‌سازی (IndexedDB)
+## Deliberately out of scope
+Cloud synchronization, collaboration, arbitrary code plugins, PDF layout engine,
+end-to-end Windows runtime testing on this Linux builder, and automatic recovery
+from every OS/database failure. Existing global scripts have not all been converted
+to ESM; the new pure boundaries make that migration possible incrementally.
 
-پایگاه `NronDB` سه store دارد. IndexedDB یک پایگاه سندی/کلید–مقدار است و مفهوم Foreign Key ندارد؛ هر store فقط یک کلید اصلی دارد:
-
-| store | کلید اصلی | محتوا |
-|-------|----------|--------|
-| `tabs` | `id` | سندها (عنوان، محتوا، تاریخچه) |
-| `articles` | `id` | منابع |
-| `settings` | `key` | تنظیمات (key/value) |
-
-تاریخچه‌ی نسخه‌ها روی خود سند (آرایه‌ی `history`) نگه‌داشته می‌شود؛ این باعث می‌شود بارگذاری یک سند با کل تاریخچه‌اش در یک خواندن انجام شود و نیاز به join نباشد.
-
-## ذخیره‌ی خودکار
-
-محتوا با تاخیر کوتاه پس از تایپ ذخیره می‌شود، و علاوه بر آن هنگام جابجایی سند، از دست رفتن تمرکز ویرایشگر، پنهان‌شدن صفحه (`visibilitychange`) و بسته شدن (`pagehide`). این برای اندروید مهم است چون سیستم ممکن است WebView را بدون رویداد beforeunload ببندد.
-
-## خروجی PDF
-
-در دسکتاپ `window.print()` به دیالوگ چاپ ویندوز (WebView2) می‌رود. WebView اندروید از چاپ داخلی پشتیبانی نمی‌کند؛ بنابراین در اندروید یک HTML آماده‌ی چاپ ذخیره می‌شود که کاربر آن را در مرورگر باز می‌کند و از طریق Print ← Save as PDF خروجی می‌گیرد.
-
-## کارایی موبایل
-
-لایه‌ی شیشه‌ای (`backdrop-filter`) روی دستگاه‌های میان‌رده‌ی اندروید سنگین است. در عرض کمتر از 860px بلور حذف و سطوح توپر جایگزین می‌شود (`css/glass.css`).
-
-## فرمان‌های هسته
-
-| فرمان | کاربرد |
-|-------|--------|
-| `count_stats(text)` | شمارش کلمات/نویسه/جمله + زمان مطالعه |
-| `find_matches(text, query)` | یافتن همه‌ی تطابق‌ها |
-| `markdown_to_html(md)` | تبدیل مارک‌داون به HTML |
-| `html_to_markdown(html)` | تبدیل HTML به مارک‌داون |
-| `build_epub(title, author, body)` | ساخت EPUB 3 |
-| `core_info()` | وضعیت هسته |
-
-## تست
-
-```bash
-cd src-tauri && cargo test
-```
+## 0.3 workspace evolution
+See `RELEASE-0.3.md` for the document/header lazy-loading boundary, atomic metadata merging,
+emergency journal, font asset limits, declarative template schema and native inset ownership.
+The previous “all documents resident” architecture no longer applies to inactive bodies/history.
+Closing tabs now archives documents and startup selects newest-created active documents.
