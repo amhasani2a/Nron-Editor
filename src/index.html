@@ -9,8 +9,11 @@
 <link rel="stylesheet" href="assets/vazirmatn.css" />
 <link rel="stylesheet" href="assets/roboto-mono.css" />
 <link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/glass.css" />
+
 <link rel="stylesheet" href="css/features.css" />
+<link rel="stylesheet" href="css/studio.css" />
+<link rel="stylesheet" href="css/workspace.css" />
+<link rel="icon" href="assets/logo.png" />
 </head>
 <body>
 <div class="app" id="app">
@@ -18,16 +21,7 @@
   <header class="header">
     <button class="icon-btn only-mobile" id="btn-menu" aria-label="منو" title="منو">☰</button>
     <div class="brand">
-      <svg class="brand-logo" viewBox="0 0 32 32" width="26" height="26" role="img" aria-label="Nron">
-        <defs>
-          <linearGradient id="nron-mark" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#00d3c7" />
-            <stop offset="1" stop-color="#2783de" />
-          </linearGradient>
-        </defs>
-        <rect x="1.6" y="1.6" width="28.8" height="28.8" rx="8" fill="none" stroke="url(#nron-mark)" stroke-width="2.4" />
-        <path d="M10 23 V9 L22 23 V9" fill="none" stroke="url(#nron-mark)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <img class="brand-logo" src="assets/logo.png" alt="لوگوی Nron" width="36" height="36" />
       <span class="brand-name">Nron</span>
     </div>
 
@@ -36,6 +30,9 @@
     </div>
 
     <div class="header-actions">
+      <button class="icon-btn" id="quick-new" aria-label="سند جدید" title="سند جدید">＋</button>
+      <button class="icon-btn" id="btn-library" aria-label="کتابخانه اسناد" title="کتابخانه اسناد">▤</button>
+      <button class="icon-btn" id="btn-commands" title="فرمان‌ها (Ctrl+Shift+P)" aria-label="فرمان‌ها">⌘</button>
       <button class="icon-btn only-desktop" id="btn-find" aria-label="جستجو" title="جستجو و جایگزینی (Ctrl+F)">🔍</button>
       <button class="icon-btn only-desktop" id="btn-gsearch" aria-label="جستجوی سراسری" title="جستجوی سراسری بین همه سندها (Ctrl+Shift+F)">🔎</button>
       <button class="icon-btn only-desktop" id="btn-cleanup" aria-label="پاکسازی متن" title="پاکسازی نیم‌فاصله و ی/ک عربی">🧹</button>
@@ -46,7 +43,7 @@
       <div class="dropdown only-desktop">
         <button class="btn" id="btn-export">خروجی ▾</button>
         <div class="dropdown-content">
-          <button data-export="pdf">PDF</button>
+          <button data-export="pdf">چاپ / PDF</button>
           <button data-export="docx">Word (DOCX)</button>
           <button data-export="epub">EPUB</button>
           <button data-export="md">Markdown</button>
@@ -194,7 +191,7 @@
     </div>
     <div class="m-sheet-head">خروجی گرفتن</div>
     <div class="m-actions">
-      <button class="m-action" data-export="pdf"><span class="mi">📄</span>PDF</button>
+      <button class="m-action" data-export="pdf"><span class="mi">📄</span>چاپ / PDF</button>
       <button class="m-action" data-export="docx"><span class="mi">📝</span>Word</button>
       <button class="m-action" data-export="epub"><span class="mi">📖</span>EPUB</button>
       <button class="m-action" data-export="md"><span class="mi">⬇</span>MD</button>
@@ -223,10 +220,13 @@
         <input type="range" id="editor-opacity" min="0.2" max="1" step="0.05" value="0.7" /></div>
       <div class="setting-group"><label class="chk"><input type="checkbox" id="typewriter-mode" /> حالت ماشین‌تحریر (تمرکز روی خط جاری)</label></div>
       <div class="setting-group"><label>پشتیبان‌گیری کامل (همه سندها و تنظیمات)</label>
+        <label class="chk"><input type="checkbox" id="backup-fonts" /> فونت‌های شخصی هم در بکاپ باشند</label>
         <div class="seg-row">
           <button class="btn sm" id="btn-backup">📦 گرفتن پشتیبان</button>
           <button class="btn sm" id="btn-restore">↩ بازیابی</button>
         </div></div>
+      <div class="setting-group"><button class="btn" id="btn-personalize">ظاهر، فونت‌ها و قالب‌های شخصی</button></div>
+      <div class="setting-group"><label>نسخه ۰.۳ · Nron Editor</label><button class="btn" id="btn-updates">بررسی به‌روزرسانی GitHub</button></div>
       <div class="modal-btns"><button class="btn btn-primary" data-close="settings-modal">بستن</button></div>
     </div>
   </div>
@@ -279,17 +279,29 @@
     <div class="modal"></div>
   </div>
 
+  <button class="btn" id="btn-exit-focus">خروج از تمرکز · Esc</button>
+  <span id="goal-progress" hidden></span>
   <div id="toast" class="toast hidden"></div>
 
+  <div class="modal-overlay hidden" id="commands-modal"><section class="modal command-modal" aria-label="فرمان‌ها"><div class="modal-head"><div><small>همه‌چیز دم دست</small><h3>فرمان‌ها</h3></div><button class="icon-btn" data-close="commands-modal" aria-label="بستن">×</button></div><input class="field" id="command-query" placeholder="نام کار را بنویسید…" aria-label="جستجوی فرمان"/><div id="command-list"></div><p class="muted">Ctrl + Shift + P · تغییرهای متن پیش‌نمایش دارند.</p></section></div>
+  <div class="modal-overlay hidden" id="transform-modal"><section class="modal"><div class="modal-head"><h3 id="transform-title">تبدیل متن</h3><button class="icon-btn" data-close="transform-modal">×</button></div><p class="muted">روی تمام متن اعمال می‌شود و قالب‌بندی به متن ساده تبدیل خواهد شد. نسخه قبلی در تاریخچه می‌ماند.</p><textarea class="field" id="transform-preview" rows="9" aria-label="پیش‌نمایش قابل ویرایش"></textarea><button class="btn btn-primary" id="transform-apply">اعمال روی سند</button></section></div>
+  <div class="modal-overlay hidden" id="plugins-modal"><section class="modal"><div class="modal-head"><h3>پلاگین‌ها</h3><button class="icon-btn" data-close="plugins-modal">×</button></div><p class="muted">افزونه‌های سبک تبدیل متن؛ بدون اجرای کد، شبکه یا دسترسی به فایل‌ها. هر تبدیل قبل از اعمال قابل بررسی است.</p><div id="plugin-list"></div><button class="btn btn-primary" id="plugin-import">افزودن پلاگین JSON</button><input type="file" id="plugin-file" accept=".json" hidden/></section></div>
+  <div class="modal-overlay hidden" id="updates-modal"><section class="modal"><div class="modal-head"><h3>به‌روزرسانی</h3><button class="icon-btn" data-close="updates-modal">×</button></div><p id="update-status" role="status"></p><pre id="release-notes"></pre><p class="muted">دریافت فقط از انتشار رسمی پروژه. در اندروید، نصب با تأیید خودتان و کلید امضای یکسان انجام می‌شود. نصب خودکار دسکتاپ به تنظیم امضای ناشر نیاز دارد.</p><div class="modal-btns"><button class="btn" id="update-link" hidden>صفحه انتشار و دانلود</button><button class="btn btn-primary" id="update-install" hidden>نصب نسخه امضاشده</button></div></section></div>
+  <div class="modal-overlay hidden" id="stats-modal"><section class="modal"><div class="modal-head"><h3>آمار نوشته</h3><button class="icon-btn" data-close="stats-modal">×</button></div><p id="stats-detail"></p></section></div>
+  <div class="modal-overlay hidden" id="help-modal"><section class="modal"><div class="modal-head"><h3>میان‌برهای نوشتن</h3><button class="icon-btn" data-close="help-modal">×</button></div><dl class="shortcut-list"><dt>Ctrl / Cmd + Shift + P</dt><dd>همه فرمان‌ها</dd><dt>Ctrl / Cmd + S</dt><dd>ذخیره</dd><dt>Ctrl / Cmd + N</dt><dd>سند جدید</dd><dt>Ctrl / Cmd + F</dt><dd>جستجو و جایگزینی</dd><dt>Ctrl / Cmd + K</dt><dd>درج پیوند</dd><dt>F11 / Esc</dt><dd>ورود / خروج از تمرکز</dd></dl></section></div>
   <input type="file" id="img-input" hidden accept="image/*" />
   <input type="file" id="import-input" hidden accept=".txt,.md,.html,.htm" />
   <input type="file" id="restore-input" hidden accept="application/json,.json" />
 </div>
 
+<script src="js/vendor.js"></script>
+<script src="js/safety.js"></script>
 <script src="js/db.js"></script>
 <script src="js/core-bridge.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/history.js"></script>
+<script src="js/export-font.js"></script>
+<script src="js/formats.js"></script>
 <script src="js/export.js"></script>
 <script src="js/articles.js"></script>
 <script src="js/find.js"></script>
@@ -297,7 +309,13 @@
 <script src="js/shortcuts.js"></script>
 <script src="js/mobile.js"></script>
 <script src="js/panels.js"></script>
+<script src="js/workspace-model.js"></script>
+<script src="js/durability.js"></script>
 <script src="js/app.js"></script>
 <script src="js/features.js"></script>
+<script src="js/text-tools.js"></script>
+<script src="js/studio.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/workspace.js"></script>
 </body>
 </html>
