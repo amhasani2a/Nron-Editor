@@ -1,0 +1,62 @@
+[
+  {
+    "id": "notonaskharabic",
+    "name": "Noto Naskh Arabic",
+    "file": "notonaskharabic.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "notosansarabic",
+    "name": "Noto Sans Arabic",
+    "file": "notosansarabic.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "amiri",
+    "name": "Amiri",
+    "file": "amiri.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "markazitext",
+    "name": "Markazi Text",
+    "file": "markazitext.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "elmessiri",
+    "name": "El Messiri",
+    "file": "elmessiri.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "lalezar",
+    "name": "Lalezar",
+    "file": "lalezar.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "changa",
+    "name": "Changa",
+    "file": "changa.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "cairo",
+    "name": "Cairo",
+    "file": "cairo.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "rakkas",
+    "name": "Rakkas",
+    "file": "rakkas.ttf",
+    "persianMissing": []
+  },
+  {
+    "id": "lateef",
+    "name": "Lateef",
+    "file": "lateef.ttf",
+    "persianMissing": []
+  }
+]
