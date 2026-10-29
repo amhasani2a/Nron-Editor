@@ -1,10 +1,10 @@
 [package]
 name = "nron-editor"
-version = "0.1.0"
+version = "0.3.0"
 description = "Nron Editor — a fast, offline-first RTL writing studio"
 authors = ["Nron"]
 edition = "2021"
-rust-version = "1.77"
+rust-version = "1.90"
 
 # The library is required for the Tauri v2 mobile (Android/iOS) entry point.
 [lib]
@@ -24,6 +24,12 @@ serde_json = "1"
 pulldown-cmark = "0.11"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 base64 = "0.22"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
+
+[dependencies.tauri-plugin-opener]
+version = "2"
 
 [profile.release]
 opt-level = "s"     # optimize for small, fast binaries on mobile

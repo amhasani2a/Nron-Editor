@@ -1,10 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Nron Editor",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "identifier": "com.nron.editor",
   "build": {
-    "frontendDist": "../src"
+    "frontendDist": "../src",
+    "beforeBuildCommand": "npm run vendor"
   },
   "app": {
     "withGlobalTauri": true,
@@ -20,7 +21,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'"
+      "csp": "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost https://api.github.com https://github.com https://objects.githubusercontent.com https://release-assets.githubusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'"
     }
   },
   "bundle": {
@@ -35,7 +36,17 @@
     ],
     "category": "Productivity",
     "shortDescription": "Fast offline RTL writing studio",
-    "longDescription": "Nron Editor is a fast, offline-first writing studio with a Rust core, full RTL support, versioned history, and multi-format export."
+    "longDescription": "Nron Editor is a fast, offline-first writing studio with a Rust core, full RTL support, versioned history, and multi-format export.",
+    "android": {
+      "minSdkVersion": 26
+    }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "pubkey": "",
+      "endpoints": [
+        "https://github.com/amhasani2a/Nron-Editor/releases/latest/download/latest.json"
+      ]
+    }
+  }
 }
