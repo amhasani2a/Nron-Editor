@@ -199,26 +199,38 @@ async function createNewTab() {
   };
   window.addToHistory?.(tab, "\u0627\u06cc\u062c\u0627\u062f");
   await dbPut("tabs", tab);
-  state.tabs.push(tab);
+
+  // درج تب جدید دقیقاً کنار تب فعال فعلی
+  const activeIdx = state.tabs.findIndex((t) => t.id === state.activeTabId);
+  if (activeIdx !== -1) {
+    state.tabs.splice(activeIdx + 1, 0, tab);
+  } else {
+    state.tabs.push(tab);
+  }
+
   await switchTab(tab.id);
 }
 
 function renderTabs() {
   DOM.docTabs.innerHTML = "";
+  let activeTabElement = null;
+
   state.tabs
     .filter((tab) => !tab.archived)
     .forEach((tab) => {
+      const isActive = tab.id === state.activeTabId;
       const el = document.createElement("div");
       el.tabIndex = 0;
       el.setAttribute("role", "tab");
-      el.setAttribute("aria-selected", String(tab.id === state.activeTabId));
+      el.setAttribute("aria-selected", String(isActive));
       el.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           switchTab(tab.id);
         }
       });
-      el.className = `doc-tab ${tab.id === state.activeTabId ? "active" : ""}`;
+      el.className = `doc-tab ${isActive ? "active" : ""}`;
+      if (isActive) activeTabElement = el;
 
       const name = document.createElement("span");
       name.className = "doc-tab-name";
@@ -269,6 +281,16 @@ function renderTabs() {
       el.append(name, close);
       DOM.docTabs.appendChild(el);
     });
+
+  if (activeTabElement) {
+    requestAnimationFrame(() => {
+      activeTabElement.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    });
+  }
 }
 
 function switchTab(id) {
