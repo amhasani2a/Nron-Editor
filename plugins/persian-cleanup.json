@@ -1,0 +1,1 @@
+{"id":"nron.persian-tools","name":"ابزارهای فارسی","version":"1.0.0","permissions":["document:read","document:replace"],"commands":[{"id":"normalize","label":"پلاگین: ی و ک فارسی","operation":"normalize"},{"id":"digits","label":"پلاگین: اعداد فارسی","operation":"fa-digits"},{"id":"spaces","label":"پلاگین: اصلاح فاصله‌ها","operation":"normalize-spaces"}]}
