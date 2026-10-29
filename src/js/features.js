@@ -387,17 +387,50 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
   const kbar = $("kbd-bar");
+  const sourceEd = $("source-editor");
   const vv = window.visualViewport;
   if (window.__TAURI__ && /android/i.test(navigator.userAgent))
     document.documentElement.dataset.nativeAndroid = "true";
+
   let edFocused = false;
+  let maxViewportHeight = vv ? vv.height : window.innerHeight;
+  let wasKeyboardOpen = false;
+
+  function exitTypingImmediate(blurActiveEditor = true) {
+    edFocused = false;
+    wasKeyboardOpen = false;
+    if (blurActiveEditor) {
+      if (document.activeElement === editor || document.activeElement === sourceEd) {
+        document.activeElement.blur();
+      }
+      try {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) sel.removeAllRanges();
+      } catch {}
+    }
+    placeKbar();
+  }
+
   function placeKbar() {
     if (!kbar) return;
-    // Both resize modes: the visual viewport shrinks, or the whole WebView shrinks.
-    // Do not apply IME height a second time when Android already resized the WebView.
     const viewport = vv && vv.scale === 1 ? vv : null;
     const height = viewport ? viewport.height : window.innerHeight;
     const top = viewport ? viewport.offsetTop : 0;
+
+    if (height > maxViewportHeight) {
+      maxViewportHeight = height;
+    }
+
+    const totalShrink = Math.max(0, maxViewportHeight - height);
+    const isKeyboardNowOpen = totalShrink > 110;
+
+    // اگر کیبورد باز بوده و الان بسته شده (مثلاً با دکمه Back اندروید)، فوراً از حالت تایپ خارج شو
+    if (wasKeyboardOpen && !isKeyboardNowOpen && edFocused) {
+      exitTypingImmediate(true);
+      return;
+    }
+    wasKeyboardOpen = isKeyboardNowOpen;
+
     const inset = Math.max(0, window.innerHeight - height - top);
     const show = window.innerWidth <= 860 && edFocused;
     document.body.classList.toggle("typing", show);
@@ -407,33 +440,56 @@ window.addEventListener("DOMContentLoaded", () => {
     );
     document.documentElement.style.setProperty("--viewport-top", top + "px");
     document.documentElement.style.setProperty("--ime-inset", inset + "px");
-    document.body.classList.toggle("ime-open", show && inset > 100);
+    document.body.classList.toggle("ime-open", show && (inset > 100 || isKeyboardNowOpen));
     kbar.style.bottom = inset + "px";
     kbar.style.display = show ? "flex" : "none";
   }
-  for (const field of [editor, $("source-editor")])
+
+  for (const field of [editor, sourceEd])
     if (field) {
       field.addEventListener("focus", () => {
         edFocused = true;
         placeKbar();
       });
-      field.addEventListener("blur", () =>
-        setTimeout(() => {
-          edFocused = [editor, $("source-editor")].includes(
-            document.activeElement,
-          );
-          placeKbar();
-        }, 60),
-      );
+      field.addEventListener("blur", (e) => {
+        const next = e.relatedTarget;
+        if (next && (next === editor || next === sourceEd || (kbar && kbar.contains(next)))) {
+          return;
+        }
+        edFocused = false;
+        placeKbar();
+      });
     }
+
+  // خروج فوری با لمس هر بخش خارج از ادیتور و نوار تایپ (مثل هدر یا تب‌ها)
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (!edFocused) return;
+      const t = e.target;
+      if (
+        (editor && editor.contains(t)) ||
+        (sourceEd && sourceEd.contains(t)) ||
+        (kbar && kbar.contains(t)) ||
+        t.closest(".modal-overlay:not(.hidden)")
+      ) {
+        return;
+      }
+      exitTypingImmediate(true);
+    },
+    true,
+  );
+
   if (vv) {
     vv.addEventListener("resize", placeKbar);
     vv.addEventListener("scroll", placeKbar);
   }
   window.addEventListener("resize", placeKbar);
   placeKbar();
+
   if (kbar) {
     kbar.addEventListener("pointerdown", (e) => e.preventDefault());
+    kbar.addEventListener("mousedown", (e) => e.preventDefault());
     kbar.querySelectorAll("button").forEach((b) =>
       b.addEventListener("click", () => {
         const k = b.getAttribute("data-k");
@@ -455,4 +511,6 @@ window.addEventListener("DOMContentLoaded", () => {
       }),
     );
   }
+
+  window.exitTypingImmediate = exitTypingImmediate;
 });
