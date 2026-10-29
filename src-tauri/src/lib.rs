@@ -8,6 +8,18 @@ mod core;
 
 use core::{epub, markdown, stats};
 
+/// Open only the publisher's fixed release page, never an arbitrary URL.
+#[tauri::command]
+fn open_release(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_url(
+            "https://github.com/amhasani2a/Nron-Editor/releases/latest",
+            None::<&str>,
+        )
+        .map_err(|e| e.to_string())
+}
+
 /// Text statistics returned to the frontend.
 #[tauri::command]
 fn count_stats(text: String) -> stats::TextStats {
@@ -50,7 +62,8 @@ fn core_info() -> serde_json::Value {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -60,8 +73,20 @@ pub fn run() {
             markdown_to_html,
             html_to_markdown,
             build_epub,
-            core_info
-        ])
+            core_info,
+            open_release
+        ]);
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let builder = if let Some(key) = option_env!("NRON_UPDATER_PUBLIC_KEY") {
+        if key.trim().is_empty() {
+            builder
+        } else {
+            builder.plugin(tauri_plugin_updater::Builder::new().pubkey(key).build())
+        }
+    } else {
+        builder
+    };
+    builder
         .run(tauri::generate_context!())
         .expect("error while running Nron Editor");
 }
