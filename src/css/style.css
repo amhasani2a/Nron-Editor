@@ -1,135 +1,392 @@
-/* ==========================================================================
-   Nron Editor - Core & Instant Mobile Footer / Format Bar Styles
-   ========================================================================== */
+:root{
+  --bg:#0b0f14; --bg-2:#0f151c; --surface:#131b24; --surface-2:#1a2530;
+  --border:#243441; --text:#e8eef4; --text-dim:#93a4b3; --accent:#00d3c7;
+  --accent-2:#2783de; --danger:#e5645f; --ok:#46a171; --warn:#d5803b;
+  --radius:10px; --radius-sm:7px; --shadow:0 6px 24px rgba(0,0,0,.35);
+  --header-h:52px; --toolbar-h:46px; --tabs-h:38px; --status-h:30px;
+  --sidebar-w:260px; --rightpanel-w:280px;
+  --editor-font:'Vazirmatn'; --editor-fs:18px; --editor-lh:1.9;
+  --editor-dir:rtl; --editor-bg-opacity:0.7; --bg-image:none;
+  --font-ui:'Vazirmatn', Tahoma, system-ui, sans-serif;
+}
+[data-theme="light"]{
+  --bg:#f5f6f8; --bg-2:#eceef1; --surface:#ffffff; --surface-2:#f0f2f5;
+  --border:#dfe3e8; --text:#1c2430; --text-dim:#5d6b7a; --accent:#0a9d94;
+  --accent-2:#2783de; --shadow:0 6px 24px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--font-ui); background:var(--bg); color:var(--text);
+  overflow:hidden; font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background-image:var(--bg-image); background-size:cover; background-position:center;
+}
+button{font-family:inherit; cursor:pointer; color:inherit}
+select,input,textarea{font-family:inherit; color:inherit}
+.hidden{display:none !important}
 
-:root {
-  --bg-primary: #121218;
-  --bg-elevated: #1b1b26;
-  --bg-toolbar: #181822;
-  --text-primary: #f2f2f7;
-  --text-muted: rgba(255, 255, 255, 0.55);
-  --accent-primary: #a5a6f6;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --footer-height: 60px;
-  --keyboard-inset-height: 0px;
+.app{
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  height:100vh; height:100dvh; max-height:100dvh;
+}
+@supports not (height:100dvh){ .app{ height:100vh } }
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  background:var(--surface-2); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:8px 14px; font-size:13px;
+  min-height:38px; display:inline-flex; align-items:center; gap:6px;
+  transition:background .15s,border-color .15s,transform .05s; white-space:nowrap;
+}
+.btn:hover{background:var(--border)}
+.btn:active{transform:scale(.97)}
+.btn.sm{padding:5px 10px; min-height:32px; font-size:12px}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:#04201e; font-weight:600}
+.btn-primary:hover{filter:brightness(1.08); background:var(--accent)}
+.icon-btn{
+  background:transparent; border:1px solid transparent; border-radius:var(--radius-sm);
+  min-width:40px; min-height:40px; display:inline-flex; align-items:center;
+  justify-content:center; font-size:16px; transition:background .15s;
+}
+.icon-btn:hover{background:var(--surface-2)}
+.icon-btn:active{background:var(--border)}
+.icon-btn.sm{min-width:30px; min-height:30px; font-size:14px}
+.format-btn.active{background:var(--accent); color:#04201e; border-color:var(--accent)}
+
+/* ---------- HEADER ---------- */
+.header{
+  height:var(--header-h); min-height:var(--header-h); display:flex; align-items:center;
+  gap:8px; padding:0 10px; background:var(--surface); border-bottom:1px solid var(--border);
+  position:relative; z-index:20;
+}
+.brand{display:flex; align-items:center; gap:8px; font-weight:700; font-size:18px; letter-spacing:.5px}
+.brand-logo{width:26px; height:26px; object-fit:contain; border-radius:6px}
+.brand-name{background:linear-gradient(90deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+.header-status{margin-inline-start:12px}
+.pomodoro{font-family:'Roboto Mono',monospace; font-size:15px; color:var(--accent); font-weight:600}
+.pomodoro.running{color:var(--warn)}
+.header-actions{display:flex; align-items:center; gap:4px; margin-inline-start:auto}
+
+/* ---------- DROPDOWN ---------- */
+.dropdown{position:relative}
+.dropdown-content{
+  position:absolute; top:calc(100% + 4px); inset-inline-end:0; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+  min-width:160px; padding:6px; display:none; flex-direction:column; gap:2px; z-index:50;
+}
+.dropdown.open .dropdown-content{display:flex}
+.dropdown-content button{
+  background:transparent; border:none; text-align:start; padding:9px 12px;
+  border-radius:var(--radius-sm); font-size:13px; min-height:38px;
+}
+.dropdown-content button:hover{background:var(--surface-2)}
+
+/* ---------- TOOLBAR ---------- */
+.toolbar{
+  height:var(--toolbar-h); min-height:var(--toolbar-h); display:flex; align-items:center;
+  gap:4px; padding:0 10px; background:var(--bg-2); border-bottom:1px solid var(--border);
+  overflow-x:auto; scrollbar-width:thin; z-index:15;
+}
+.toolbar::-webkit-scrollbar{height:4px}
+.toolbar::-webkit-scrollbar-thumb{background:var(--border); border-radius:4px}
+.tool-group{display:flex; align-items:center; gap:2px; flex-shrink:0}
+.tool-sep{width:1px; height:24px; background:var(--border); margin:0 4px; flex-shrink:0}
+.toolbar select{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:7px 8px; min-height:36px; font-size:13px;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+/* ---------- DOC TABS ---------- */
+.doc-tabs{
+  height:var(--tabs-h); min-height:var(--tabs-h); display:flex; align-items:stretch; gap:4px;
+  padding:0 8px; background:var(--surface); border-bottom:1px solid var(--border);
+  overflow-x:auto; overflow-y:hidden; flex-wrap:nowrap; scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch; touch-action:pan-x; scrollbar-width:none;
+}
+.doc-tabs::-webkit-scrollbar{display:none}
+.doc-tab{
+  flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:0 12px; font-size:13px;
+  border:1px solid transparent; border-bottom:none; cursor:pointer; white-space:nowrap;
+  color:var(--text-dim); border-radius:var(--radius-sm) var(--radius-sm) 0 0; min-width:96px;
+}
+.doc-tab.active{background:var(--bg); color:var(--text); border-color:var(--border); font-weight:600}
+.doc-tab .close-tab{opacity:.6; font-size:16px; padding:0 2px; border-radius:4px}
+.doc-tab .close-tab:hover{opacity:1; background:var(--danger); color:#fff}
+
+/* ---------- WORKSPACE ---------- */
+.workspace{flex:1; display:flex; min-height:0; position:relative}
+.sidebar,.source-panel{
+  flex-shrink:0; background:var(--surface); display:flex; flex-direction:column;
+  min-height:0;
+}
+.sidebar{width:var(--sidebar-w); border-inline-end:1px solid var(--border)}
+.source-panel{width:var(--rightpanel-w); border-inline-start:1px solid var(--border)}
+
+/* ---------- RESIZERS & COLLAPSE ---------- */
+.resizer{
+  width:6px; flex-shrink:0; cursor:col-resize; background:transparent;
+  position:relative; z-index:8; transition:background .15s; touch-action:none;
+}
+.resizer::before{
+  content:""; position:absolute; inset-block:0; inset-inline-start:2px; width:2px;
+  background:var(--border); transition:background .15s;
+}
+.resizer:hover::before,.resizer.dragging::before{background:var(--accent); width:3px}
+.panel-collapse{color:var(--text-dim); flex-shrink:0; font-weight:700}
+.panel-head-actions{display:flex; align-items:center; gap:4px}
+#btn-panel-left.active,#btn-panel-right.active{color:var(--accent); background:var(--surface-2)}
+@media (min-width:861px){
+  .sidebar.collapsed,.source-panel.collapsed{display:none}
+  .resizer.collapsed{display:none}
+}
+.sidebar-tabs{display:flex; border-bottom:1px solid var(--border)}
+.sidebar-tab{flex:1; background:transparent; border:none; padding:11px; font-size:13px; color:var(--text-dim); border-bottom:2px solid transparent}
+.sidebar-tab.active{color:var(--text); border-bottom-color:var(--accent); font-weight:600}
+.sidebar-body{flex:1; overflow-y:auto; min-height:0}
+.sidebar-panel{display:none; padding:8px}
+.sidebar-panel.active{display:block}
+.sidebar-header,.panel-header{
+  display:flex; align-items:center; justify-content:space-between; padding:8px 6px;
+  font-size:13px; font-weight:600; color:var(--text-dim);
+}
+.history-item{
+  padding:8px 10px; border:1px solid var(--border); border-radius:var(--radius-sm);
+  margin-bottom:6px; cursor:pointer; transition:background .15s;
+}
+.history-item:hover{background:var(--surface-2)}
+.history-item .h-time{color:var(--text-dim); font-size:10px; font-family:'Roboto Mono',monospace}
+.history-item .h-action{color:var(--accent); font-size:12px; margin-top:2px}
+.outline-item{padding:7px 10px; border-radius:var(--radius-sm); cursor:pointer; font-size:13px; color:var(--text-dim)}
+.outline-item:hover{background:var(--surface-2); color:var(--text)}
+.outline-item.lvl-2{padding-inline-start:22px; font-size:12px}
+.outline-item.lvl-3{padding-inline-start:34px; font-size:12px; opacity:.85}
+
+/* ---------- EDITOR ---------- */
+.editor-wrapper{flex:1; position:relative; min-width:0; overflow:hidden; display:flex}
+#visual-editor,#source-editor{
+  flex:1; height:100%; overflow-y:auto; padding:40px 8%; outline:none;
+  background:color-mix(in srgb, var(--bg) calc(var(--editor-bg-opacity)*100%), transparent);
+  direction:var(--editor-dir);
+}
+#visual-editor{
+  font-family:var(--editor-font); font-size:var(--editor-fs); line-height:var(--editor-lh);
+  color:var(--text);
+}
+#visual-editor:empty::before{content:"شروع به نوشتن کنید..."; color:var(--text-dim)}
+#visual-editor h1{font-size:1.9em; margin:.6em 0 .3em}
+#visual-editor h2{font-size:1.5em; margin:.6em 0 .3em}
+#visual-editor h3{font-size:1.25em; margin:.5em 0 .3em}
+#visual-editor p{margin:.5em 0}
+#visual-editor blockquote{border-inline-start:3px solid var(--accent); padding-inline-start:14px; color:var(--text-dim); margin:.6em 0}
+#visual-editor pre{background:var(--surface-2); padding:12px; border-radius:var(--radius-sm); font-family:'Roboto Mono',monospace; direction:ltr; overflow-x:auto}
+#visual-editor img{max-width:100%; border-radius:6px; margin:6px 0}
+#visual-editor table{border-collapse:collapse; width:100%; margin:10px 0}
+#visual-editor td,#visual-editor th{border:1px solid var(--border); padding:8px}
+#visual-editor a{color:var(--accent-2)}
+#visual-editor ul,#visual-editor ol{padding-inline-start:26px; margin:.5em 0}
+#visual-editor mark.find-hit{background:var(--warn); color:#000}
+#visual-editor mark.find-current{background:var(--accent); color:#04201e}
+#source-editor{
+  display:none; font-family:'Roboto Mono',monospace; font-size:14px; line-height:1.7;
+  border:none; resize:none; direction:ltr; text-align:left;
+}
+.typewriter #visual-editor{padding-top:40vh; padding-bottom:40vh}
+
+/* ---------- SOURCE / ARTICLES PANEL ---------- */
+.article-tabs{display:flex; flex-wrap:wrap; gap:4px; padding:8px}
+.art-tab{
+  padding:6px 10px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:var(--radius-sm); font-size:12px; cursor:pointer; display:flex; gap:6px; align-items:center;
+}
+.art-tab.active{border-color:var(--accent); color:var(--accent)}
+.art-tab .del-art{color:var(--danger); font-weight:700}
+.article-content{flex:1; overflow-y:auto; padding:12px; font-size:14px; line-height:1.9}
+.article-content h3{margin-bottom:8px; color:var(--accent)}
+.article-content hr{border:none; border-top:1px solid var(--border); margin:8px 0}
+
+/* ---------- STATUS BAR ---------- */
+.statusbar{
+  height:var(--status-h); min-height:var(--status-h); display:flex; align-items:center;
+  justify-content:space-between; padding:0 14px; background:var(--surface);
+  border-top:1px solid var(--border); font-size:12px; color:var(--text-dim);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.status-stats{display:flex; gap:8px; align-items:center}
+.status-dot{opacity:.5}
+
+/* ---------- MODALS ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center;
+  justify-content:center; z-index:100; padding:16px; backdrop-filter:blur(3px);
+}
+.modal{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); width:100%; max-width:460px; max-height:90vh; overflow-y:auto; padding:20px;
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px}
+.modal-head h3{font-size:17px}
+.setting-group{margin-bottom:18px; display:flex; flex-direction:column; gap:8px}
+.setting-group label{font-size:13px; color:var(--text-dim)}
+.setting-group label.chk{flex-direction:row; display:flex; align-items:center; gap:8px; color:var(--text)}
+.field{
+  width:100%; padding:10px 12px; background:var(--bg-2); color:var(--text);
+  border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; margin-bottom:10px;
+}
+textarea.field{resize:vertical; min-height:120px}
+input[type=range]{accent-color:var(--accent); width:100%}
+.seg{display:flex; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden}
+.seg button{flex:1; background:transparent; border:none; padding:9px; font-size:13px; min-height:38px}
+.seg button.active{background:var(--accent); color:#04201e; font-weight:600}
+.modal-btns{display:flex; gap:8px; justify-content:flex-start; margin-top:6px}
+
+/* ---------- FIND BAR ---------- */
+.find-bar{
+  position:fixed; top:calc(var(--header-h) + 6px); inset-inline-end:14px; z-index:90;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; max-width:calc(100vw - 28px);
+}
+.find-bar input{
+  padding:7px 10px; background:var(--bg-2); border:1px solid var(--border);
+  border-radius:var(--radius-sm); font-size:13px; min-height:34px; width:150px;
+}
+.find-count{font-size:12px; color:var(--text-dim); font-family:'Roboto Mono',monospace; min-width:44px; text-align:center}
+
+/* ---------- TOAST ---------- */
+.toast{
+  position:fixed; bottom:calc(var(--status-h) + 16px); left:50%; transform:translateX(-50%);
+  background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+  padding:10px 18px; border-radius:99px; box-shadow:var(--shadow); z-index:200; font-size:13px;
+  transition:opacity .2s, transform .2s;
 }
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
-  direction: rtl;
+/* ---------- ZEN MODE ---------- */
+.app.zen-mode .toolbar,.app.zen-mode .doc-tabs,.app.zen-mode .sidebar,
+.app.zen-mode .source-panel,.app.zen-mode .header-actions,.app.zen-mode .bottom-nav{display:none !important}
+.app.zen-mode #visual-editor{padding:6vh 12%}
+
+/* ---------- MOBILE NAV ---------- */
+.only-mobile{display:none}
+.bottom-nav{
+  display:none; min-height:60px; background:var(--surface); border-top:1px solid var(--border);
+  padding-bottom:max(env(safe-area-inset-bottom), 8px);
+}
+.bottom-nav button{
+  flex:1; background:transparent; border:none; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:3px; font-size:18px; color:var(--text-dim); min-height:56px;
+}
+.bottom-nav button span{font-size:10px}
+.bottom-nav button.active{color:var(--accent)}
+
+/* ---------- MOBILE BOTTOM SHEETS / BACKDROP / FAB (Android UI) ---------- */
+.sheet-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:58;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+}
+.sheet-backdrop.show{opacity:1; pointer-events:auto}
+.m-sheet{
+  position:fixed; inset-inline:0; bottom:0; z-index:63; background:var(--surface);
+  border-top:1px solid var(--border); border-radius:20px 20px 0 0;
+  box-shadow:0 -10px 34px rgba(0,0,0,.45); max-height:82dvh; overflow-y:auto;
+  transform:translateY(100%); transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  padding:0 16px calc(22px + env(safe-area-inset-bottom));
+}
+.m-sheet.open{transform:translateY(0)}
+.sheet-grip{width:42px; height:4px; border-radius:99px; background:var(--border); margin:10px auto 4px}
+.m-sheet-head{font-size:12px; color:var(--text-dim); font-weight:700; padding:14px 2px 8px}
+.m-actions{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.m-action{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
+  padding:12px 4px; font-size:11px; color:var(--text); min-height:66px; text-align:center;
+}
+.m-action:active{background:var(--border); transform:scale(.97)}
+.m-action .mi{font-size:21px; line-height:1}
+.fab{
+  position:fixed; z-index:57; inset-inline-end:18px;
+  bottom:calc(74px + env(safe-area-inset-bottom));
+  width:56px; height:56px; border-radius:50%; border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#04201e;
+  font-size:30px; line-height:1; box-shadow:0 8px 22px rgba(0,0,0,.45);
+  display:none; align-items:center; justify-content:center;
+}
+.fab:active{transform:scale(.93)}
+
+/* ============ RESPONSIVE / MOBILE (Android-first UX) ============ */
+@media (max-width:860px){
+  .only-desktop{display:none !important}
+  .only-mobile{display:inline-flex}
+  .bottom-nav{display:flex}
+  .fab{display:flex}
+
+  .header{
+    height:auto; min-height:var(--header-h); gap:6px;
+    padding-top:max(env(safe-area-inset-top), 20px); padding-inline:8px;
+  }
+  .statusbar{display:none}
+
+  .sidebar,.source-panel,.toolbar{
+    position:fixed; inset-inline:0; bottom:0; top:auto; width:auto; height:auto;
+    max-height:78dvh; overflow-y:auto; z-index:63; background:var(--surface);
+    border:none; border-top:1px solid var(--border); border-radius:20px 20px 0 0;
+    box-shadow:0 -10px 34px rgba(0,0,0,.45);
+    transform:translateY(100%); transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  }
+  .sidebar::before,.source-panel::before,.toolbar::before{
+    content:""; flex:0 0 100%; height:16px; margin:8px 0 4px;
+    background:linear-gradient(var(--border),var(--border)) center/44px 4px no-repeat;
+  }
+  .sidebar.mobile-open,.source-panel.mobile-open,.toolbar.mobile-open{transform:translateY(0)}
+
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 14px calc(16px + env(safe-area-inset-bottom))}
+  .toolbar .tool-sep{display:none}
+  .toolbar .tool-group{gap:6px; flex-wrap:wrap}
+  .toolbar .icon-btn{min-width:46px; min-height:46px; font-size:18px; background:var(--surface-2); border:1px solid var(--border)}
+  .toolbar select{min-height:46px; flex:1 1 120px}
+
+  .sidebar-body{max-height:64dvh}
+
+  #visual-editor,#source-editor{padding:20px 18px}
+  .editor-wrapper{width:100%}
+  .doc-tabs{padding:0 6px}
+  .brand-name{font-size:17px}
+  .header-actions{gap:4px}
+  .header-actions .btn{padding:8px 12px; min-height:40px}
+
+  .bottom-nav{padding-bottom:max(env(safe-area-inset-bottom), 10px)}
+
+  .modal{max-width:100%}
+  .find-bar{inset-inline:8px; top:calc(max(env(safe-area-inset-top),20px) + 46px)}
+  .find-bar input{width:100%; flex:1 1 120px}
+}
+@media (max-width:420px){
+  #btn-export .dropdown-content{inset-inline-end:auto; inset-inline-start:0}
+  #visual-editor{font-size:calc(var(--editor-fs) * .95)}
 }
 
-/* ==========================================================================
-   سوئیچ فوری (0ms) بین «منوی دستورات تایپی» و «دکمه‌های تب فوتر اپ»
-   ========================================================================== */
-
-/* دکمه‌های تب فوتر اپ (نوشتن، فهرست، تاریخچه، منابع، قالب) */
-#mobile-tab-bar,
-.mobile-tab-bar,
-#mobile-nav,
-.mobile-nav,
-#app-footer,
-.app-footer,
-.bottom-nav {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-around;
-  width: 100%;
-  height: var(--footer-height);
-  min-height: var(--footer-height);
-  background: var(--bg-toolbar);
-  border-top: 1px solid var(--border-subtle);
-  padding: 4px 6px;
-  z-index: 100;
-  /* حذف هرگونه transition تا در لحظه خروج از تایپ، فوراً برگردد */
-  transition: none !important;
+/* ---------- PRINT (PDF export) ---------- */
+@media print{
+  .header,.toolbar,.doc-tabs,.sidebar,.source-panel,.statusbar,.bottom-nav,.find-bar,#source-editor{display:none !important}
+  .app,.workspace,.editor-wrapper{display:block; height:auto; overflow:visible}
+  body{background:#fff; color:#000; overflow:visible}
+  #visual-editor{padding:0; color:#000; background:#fff; direction:var(--editor-dir)}
 }
 
-/* منوی دستورات تایپی (B, I, U, H2, ...) */
-#mobile-format-bar,
-.mobile-format-bar,
-#typing-toolbar,
-.typing-toolbar,
-#format-toolbar,
-.format-toolbar,
-.editor-toolbar-bottom {
-  display: none;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 8px;
-  width: 100%;
-  height: 54px;
-  min-height: 54px;
-  padding: 6px 10px;
-  background: var(--bg-toolbar);
-  border-top: 1px solid var(--border-subtle);
-  z-index: 105;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  /* حذف انیمیشن خروج تا بلافاصله مخفی شود */
-  transition: none !important;
-}
+/* ---------- SCROLLBARS ---------- */
+::-webkit-scrollbar{width:9px; height:9px}
+::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-dim)}
+::-webkit-scrollbar-track{background:transparent}
 
-#mobile-format-bar::-webkit-scrollbar,
-.mobile-format-bar::-webkit-scrollbar,
-.typing-toolbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* وقتی کاربر در حال تایپ است: منوی دستورات تایپی فعال و تب فوتر مخفی */
-body.is-typing #mobile-format-bar,
-body.is-typing .mobile-format-bar,
-body.is-typing #typing-toolbar,
-body.is-typing .typing-toolbar,
-body.is-typing #format-toolbar,
-body.is-typing .format-toolbar {
-  display: flex !important;
-}
-
-body.is-typing #mobile-tab-bar,
-body.is-typing .mobile-tab-bar,
-body.is-typing #mobile-nav,
-body.is-typing .mobile-nav,
-body.is-typing #app-footer,
-body.is-typing .app-footer,
-body.is-typing .bottom-nav {
-  display: none !important;
-}
-
-/* به محض خروج از حالت تایپ: منوی دستورات تایپی فوراً مخفی و تب‌های فوتر نمایان */
-body:not(.is-typing) #mobile-format-bar,
-body:not(.is-typing) .mobile-format-bar,
-body:not(.is-typing) #typing-toolbar,
-body:not(.is-typing) .typing-toolbar,
-body:not(.is-typing) #format-toolbar,
-body:not(.is-typing) .format-toolbar {
-  display: none !important;
-}
-
-body:not(.is-typing) #mobile-tab-bar,
-body:not(.is-typing) .mobile-tab-bar,
-body:not(.is-typing) #mobile-nav,
-body:not(.is-typing) .mobile-nav,
-body:not(.is-typing) #app-footer,
-body:not(.is-typing) .app-footer,
-body:not(.is-typing) .bottom-nav {
-  display: flex !important;
+body.typing .bottom-nav,body.typing .fab{display:none !important}
+body.typing #visual-editor,body.typing #source-editor{padding-bottom:72px}
+@media (max-width:860px){
+  .doc-tab{min-height:42px}
+  .doc-tab .close-tab{font-size:19px; padding:2px 8px}
 }
