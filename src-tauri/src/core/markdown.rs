@@ -18,7 +18,7 @@ pub fn to_html(markdown: &str) -> String {
 /// Best-effort HTML → Markdown. Handles the block/inline tags Nron emits.
 pub fn from_html(html: &str) -> String {
     let mut out = String::new();
-    let mut chars = html.chars().peekable();
+    let chars = html.chars();
     let mut buf = String::new();
 
     // Extremely small tag-aware transformer good enough for our own output.
@@ -33,7 +33,7 @@ pub fn from_html(html: &str) -> String {
         buf.clear();
     };
 
-    while let Some(c) = chars.next() {
+    for c in chars {
         match c {
             '<' => {
                 in_tag = true;
@@ -43,16 +43,42 @@ pub fn from_html(html: &str) -> String {
                 in_tag = false;
                 let name = tag.trim().to_lowercase();
                 match name.as_str() {
-                    "h1" => { flush(&mut buf, &mut out); out.push_str("\n# "); }
-                    "h2" => { flush(&mut buf, &mut out); out.push_str("\n## "); }
-                    "h3" => { flush(&mut buf, &mut out); out.push_str("\n### "); }
-                    "blockquote" => { flush(&mut buf, &mut out); out.push_str("\n> "); }
-                    "b" | "strong" | "/b" | "/strong" => { flush(&mut buf, &mut out); out.push_str("**"); }
-                    "i" | "em" | "/i" | "/em" => { flush(&mut buf, &mut out); out.push('*'); }
+                    "h1" => {
+                        flush(&mut buf, &mut out);
+                        out.push_str("\n# ");
+                    }
+                    "h2" => {
+                        flush(&mut buf, &mut out);
+                        out.push_str("\n## ");
+                    }
+                    "h3" => {
+                        flush(&mut buf, &mut out);
+                        out.push_str("\n### ");
+                    }
+                    "blockquote" => {
+                        flush(&mut buf, &mut out);
+                        out.push_str("\n> ");
+                    }
+                    "b" | "strong" | "/b" | "/strong" => {
+                        flush(&mut buf, &mut out);
+                        out.push_str("**");
+                    }
+                    "i" | "em" | "/i" | "/em" => {
+                        flush(&mut buf, &mut out);
+                        out.push('*');
+                    }
                     "br" | "br/" => out.push_str("  \n"),
-                    "/p" | "/h1" | "/h2" | "/h3" | "/blockquote" | "/li" => { flush(&mut buf, &mut out); out.push('\n'); }
-                    "li" => { flush(&mut buf, &mut out); out.push_str("\n- "); }
-                    _ => { flush(&mut buf, &mut out); }
+                    "/p" | "/h1" | "/h2" | "/h3" | "/blockquote" | "/li" => {
+                        flush(&mut buf, &mut out);
+                        out.push('\n');
+                    }
+                    "li" => {
+                        flush(&mut buf, &mut out);
+                        out.push_str("\n- ");
+                    }
+                    _ => {
+                        flush(&mut buf, &mut out);
+                    }
                 }
             }
             _ => {

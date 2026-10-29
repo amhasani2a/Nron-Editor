@@ -28,8 +28,7 @@ pub fn build(title: &str, author: &str, body_html: &str) -> zip::result::ZipResu
         zip.start_file("mimetype", stored)?;
         zip.write_all(b"application/epub+zip")?;
 
-        let deflated =
-            SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let deflated = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
 
         // 2) container.xml
         zip.start_file("META-INF/container.xml", deflated)?;

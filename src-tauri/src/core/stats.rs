@@ -44,7 +44,7 @@ pub fn analyze(text: &str) -> TextStats {
         .count();
 
     // ~200 words per minute average Persian reading speed.
-    let reading_time_min = if words == 0 { 0 } else { (words + 199) / 200 };
+    let reading_time_min = words.div_ceil(200);
 
     TextStats {
         words,
