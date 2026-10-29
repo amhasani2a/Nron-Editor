@@ -1,61 +1,87 @@
-<div align="center">
+> **نسخهٔ ۰.۳:** کتابخانه و بایگانی، قالب شخصی، فونت شخصی، پومودوروی قابل تنظیم و رفع حاشیهٔ کیبورد. راهنمای تغییرات: `docs/RELEASE-0.3.md`.
 
-# Nron Editor
+# Nron Editor · 0.2
 
-**یک برنامه نوشتن سریع، آفلاین و فارسی — با هسته‌ی Rust**
+A small offline-first writing desk for Persian and English. Tauri 2, Rust and
+vanilla JavaScript. Mobile sheets, keyboard shortcuts, local history and real
+multi-format output. Licensed **GPL-3.0-only** (see `LICENSE`).
 
-A fast, offline-first, RTL-native writing studio powered by a Rust core and Tauri v2.
+## شروع سریع
 
-![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Android-2783de)
-![core](https://img.shields.io/badge/core-Rust-orange)
-![license](https://img.shields.io/badge/license-MIT-46a171)
+- **فرمان‌ها** در بالای برنامه، یا `Ctrl/Cmd + Shift + P`: ۵۰ فرمان سبک.
+- تبدیل متن پیش‌نمایش دارد؛ قبل از جایگزینی، نسخه قبلی در تاریخچه ثبت می‌شود.
+- در موبایل: نوشتن، فهرست، تاریخچه، منابع و قالب در نوار پایین؛ ورود/خروجی و
+  تنظیمات در منوی بالا. از بخش قالب هم می‌توانید سند تازه بسازید.
+- نوشته‌ها روی دستگاه ذخیره می‌شوند؛ پشتیبان JSON را منظم دانلود کنید.
+- پلاگین نمونه: `plugins/persian-cleanup.json`؛ راهنما: `docs/PLUGINS.md`.
+- به‌روزرسانی: تنظیمات → بررسی به‌روزرسانی GitHub؛ جزئیات امضا در `docs/UPDATES.md`.
 
-</div>
+## Build prerequisites
 
----
+Node 24, Rust stable (with rustfmt/clippy), and the OS prerequisites for Tauri 2.
+Linux: GTK3/WebKitGTK 4.1 development packages. Android: Java 17, SDK 36,
+Build Tools 36.0.0 and NDK 28.2.13676358. Build Windows installers on a Windows
+runner with MSVC and WebView2 prerequisites; macOS bundles require macOS/Xcode.
 
-## فارسی
-
-**Nron Editor** یک ادیتور  نوشتن ( است که کاملاً آفلاین کار می‌کند. هسته‌ی محاسباتی آن (شمارش، جستجو، تبدیل مارک‌داون، ساخت EPUB) با **Rust** نوشته شده تا سریع باشد، و رابط کاربری آن کاملاً **ریسپانسیو** و مناسب موبایل است.
-
-### اجرا (دسکتاپ)
-
-```bash
-# پیش‌نیاز: Rust (rustup) + Tauri CLI
-cargo install tauri-cli --version "^2" --locked
-
-git clone https://github.com/<username>/nron-editor.git
-cd nron-editor
-cargo tauri dev      # اجرای توسعه
-cargo tauri build    # ساخت نسخه‌ی نهایی ویندوز
+```sh
+npm ci
+npm run vendor
+npm test
+npm run test:ui  # npx playwright install chromium on a fresh machine
+cargo test --manifest-path src-tauri/Cargo.toml --locked
+npm run tauri -- build
 ```
 
+For local browser development: `python3 -m http.server 4318 --directory src`.
+This is a development preview, not a hosted production service. Do not deploy the
+source directory with user secrets. All frontend dependencies are bundled locally.
 
-## English
+### Android
 
-Nron Editor is a professional writing app (articles / stories / novels) that works fully offline. Its compute core (statistics, search, Markdown conversion, EPUB packaging) is written in **Rust** for speed, and the UI is fully **responsive** and mobile-friendly. It ships as a native **Windows** desktop app and an **Android** app from a single codebase via **Tauri v2**.
+Set `JAVA_HOME`, `ANDROID_HOME` and `NDK_HOME` to your own installations, then:
 
-### Project layout
-
-```
-nron-editor/
-├─ src/                 # Frontend (HTML/CSS/JS) — the webview UI
-│  ├─ index.html
-│  ├─ css/style.css     # responsive, RTL, light/dark
-│  ├─ js/               # modular controllers (db, app, find, export, ...)
-│  └─ assets/           # Vazirmatn + Roboto Mono fonts, logo
-├─ src-tauri/           # Rust core (Tauri v2)
-│  ├─ src/lib.rs        # command handlers + mobile entry point
-│  ├─ src/core/         # stats.rs, markdown.rs, epub.rs (+ unit tests)
-│  ├─ Cargo.toml
-│  └─ tauri.conf.json
-├─ .github/workflows/   # CI: Windows + Android build & release
-└─ docs/                # ARCHITECTURE.md, FEATURES.md, CONTRIBUTING.md
+```sh
+rustup target add aarch64-linux-android
+npm run tauri -- android init --ci
+node tools/android-config.cjs
+npm run tauri -- icon src-tauri/icons/icon.png
+npm run tauri -- android build --apk --target aarch64 --debug
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/FEATURES.md`](docs/FEATURES.md).
+The debug APK installs for testing. For release, omit `--debug` and sign with your
+persistent publisher key; see `docs/UPDATES.md`. The generated Android project is
+not committed; `android init` recreates it. To change generator settings, apply
+and document an explicit post-init patch rather than checking in local paths.
 
-## License
+## GitHub Actions
 
-GNU GENERAL PUBLIC LICENSE
- — see [LICENSE](LICENSE).
+Upload the source contents to the repository root, including hidden `.github`.
+Actions → **Cross-platform builds** → Run workflow creates independent desktop
+and Android artifacts after quality checks. **Android test APK** creates an
+installable arm64 test build without production secrets. A `v*` tag builds a draft
+release; inspect it before publishing. Workflows were statically validated here,
+not executed on your GitHub account. Your existing repository is not modified
+until you upload/push these files.
+
+## Output fidelity
+
+- TXT, Markdown, sanitized HTML, genuine `.docx` OOXML ZIP and `.epub` ZIP.
+- Word export is a compact text/basic-format export, not a full HTML/CSS layout
+  converter. Complex tables/layouts and images are best preserved with HTML.
+- EPUB contains sanitized XHTML. Supported embedded raster images are packaged;
+  unsupported/remote images become their alternative text.
+- **Print / PDF** uses the desktop print dialog. On Android it saves printable
+  HTML for opening in a browser and printing to PDF; no fake `.pdf` is produced.
+- Text transforms flatten rich formatting deliberately and warn before applying.
+
+## Documentation
+
+- `docs/ARCHITECTURE.md`: modules, compatibility and limits
+- `docs/FEATURES-50.md`: exact implemented command catalogue
+- `docs/PLUGINS.md`: plugin schema and host permissions
+- `docs/UPDATES.md`: publisher signing and release updates
+- `docs/VERIFICATION.md`: actual test/build results and known limitations
+
+The supplied logo is used, not redrawn. Third-party notices are in
+`THIRD_PARTY_NOTICES.md`. Skills used for the workflow are included under
+`.agents/skills`; they are development references, not an app runtime dependency.

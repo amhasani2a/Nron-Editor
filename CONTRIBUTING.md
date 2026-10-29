@@ -6,11 +6,13 @@
 
 ```bash
 rustup default stable
-cargo install tauri-cli --version "^2" --locked
-cargo tauri dev
+npm ci
+npm run vendor
+npm test
+npm run tauri -- dev
 ```
 
-اگر فقط روی رابط کاربری کار می‌کنی، لازم نیست Rust را کامپایل کنی — `src/index.html` را در مرورگر باز کن. در این حالت هسته به پیاده‌سازی JS جایگزین سوئیچ می‌کند.
+اگر فقط روی رابط کاربری کار می‌کنی، لازم نیست Rust را کامپایل کنی — با `python3 -m http.server 4318 --directory src` سرور محلی را اجرا و نشانی `http://127.0.0.1:4318` را باز کن. در این حالت هسته به پیاده‌سازی JS جایگزین سوئیچ می‌کند.
 
 ## ساختار کد رابط کاربری
 
@@ -30,6 +32,11 @@ cargo tauri dev
 | `shortcuts.js` | کلیدهای میانبر |
 | `mobile.js` | تجربه‌ی موبایل (باتم‌شیت‌ها) |
 | `panels.js` | پنل‌های دسکتاپ |
+| `safety.js` | مرز پاک‌سازی HTML |
+| `text-tools.js` | عملیات خالص تبدیل متن و اعتبارسنجی پلاگین |
+| `studio.js` | پالت فرمان، میزبان پلاگین و رابط انتشار |
+| `formats.js` | ساخت بسته‌های DOCX و EPUB |
+| `icons.js` | آیکون‌های SVG |
 | `features.js` | جستجوی سراسری، پاکسازی، پشتیبان |
 
 CSS در سه فایل: `style.css` (پایه و ریسپانسیو)، `glass.css` (لایه‌ی شیشه‌ای)، `features.css`.

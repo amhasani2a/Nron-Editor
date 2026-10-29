@@ -1,0 +1,7 @@
+# Verification logs are evidence: retain compiler whitespace byte-for-byte.
+docs/verification/raw/* -whitespace
+
+.agents/skills/** -whitespace
+src/assets/licenses/** -whitespace
+docs/verification-v03/raw/* -whitespace
+src/assets/fonts-extra/*-OFL.txt -whitespace

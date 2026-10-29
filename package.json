@@ -1,0 +1,27 @@
+{
+  "name": "nron-editor",
+  "version": "0.3.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "tauri": "tauri",
+    "test": "node --test tests/*.test.cjs",
+    "test:ui": "playwright test",
+    "vendor": "node tools/vendor.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@tauri-apps/cli": "2.12.4",
+    "esbuild": "0.25.12",
+    "prettier": "3.6.2"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/plugin-dialog": "2.8.3",
+    "@tauri-apps/plugin-fs": "2.7.1",
+    "@tauri-apps/plugin-os": "2.4.0",
+    "@tauri-apps/plugin-updater": "2.14.0",
+    "dompurify": "3.4.17",
+    "fflate": "0.8.3"
+  }
+}
