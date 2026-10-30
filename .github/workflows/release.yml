@@ -136,8 +136,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: node tools/update-manifest.cjs artifacts
-      - name: Remove test builds from public release
-        run: find artifacts -name '*-TEST.apk' -delete
+      
       - uses: softprops/action-gh-release@v2
         with:
           draft: true
