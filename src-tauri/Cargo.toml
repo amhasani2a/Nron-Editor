@@ -1,6 +1,6 @@
 [package]
 name = "nron-editor"
-version = "0.3.0"
+version = "0.1.4"
 description = "Nron Editor — a fast, offline-first RTL writing studio"
 authors = ["Nron"]
 edition = "2021"
