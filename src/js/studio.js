@@ -1,7 +1,7 @@
 /* Host for the command palette, declarative plugins and release UI. No eval. */
 window.NronStudio = (() => {
   const $ = (id) => document.getElementById(id);
-  const version = "0.3.0";
+  const version = "0.1.4";
   let plugins = [];
   let pendingTransform = null;
   const names = [
