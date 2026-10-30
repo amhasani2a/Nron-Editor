@@ -2242,7 +2242,7 @@ dependencies = [
 
 [[package]]
 name = "nron-editor"
-version = "0.3.0"
+version = "0.1.4"
 dependencies = [
  "base64 0.22.1",
  "pulldown-cmark",
